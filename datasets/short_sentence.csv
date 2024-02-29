@@ -1,0 +1,523 @@
+sentence,sentence_GROUP,subj_TYPE,subj_ANIM,subj_GEN,subj_NUM,subj_PERS,subj_ZIPF,sentence_TENSE,verb_ZIPF
+Mary plays.,sv,PropN,True,f,sg,3,4.5,pres,4.5
+Mary sings.,sv,PropN,True,f,sg,3,4.5,pres,3.5
+Mary sneezes.,sv,PropN,True,f,sg,3,4.5,pres,2.5
+Mary played.,sv,PropN,True,f,sg,3,4.5,past,4.5
+Mary sang.,sv,PropN,True,f,sg,3,4.5,past,3.5
+Mary sneezed.,sv,PropN,True,f,sg,3,4.5,past,2.5
+Mary falls.,sv,PropN,True,f,sg,3,4.5,pres,4.5
+Mary disappears.,sv,PropN,True,f,sg,3,4.5,pres,3.5
+Mary vanishes.,sv,PropN,True,f,sg,3,4.5,pres,3.0
+Mary fell.,sv,PropN,True,f,sg,3,4.5,past,4.5
+Mary disappeared.,sv,PropN,True,f,sg,3,4.5,past,3.5
+Mary vanished.,sv,PropN,True,f,sg,3,4.5,past,3.0
+Patricia plays.,sv,PropN,True,f,sg,3,3.5,pres,4.5
+Patricia sings.,sv,PropN,True,f,sg,3,3.5,pres,3.5
+Patricia sneezes.,sv,PropN,True,f,sg,3,3.5,pres,2.5
+Patricia played.,sv,PropN,True,f,sg,3,3.5,past,4.5
+Patricia sang.,sv,PropN,True,f,sg,3,3.5,past,3.5
+Patricia sneezed.,sv,PropN,True,f,sg,3,3.5,past,2.5
+Patricia falls.,sv,PropN,True,f,sg,3,3.5,pres,4.5
+Patricia disappears.,sv,PropN,True,f,sg,3,3.5,pres,3.5
+Patricia vanishes.,sv,PropN,True,f,sg,3,3.5,pres,3.0
+Patricia fell.,sv,PropN,True,f,sg,3,3.5,past,4.5
+Patricia disappeared.,sv,PropN,True,f,sg,3,3.5,past,3.5
+Patricia vanished.,sv,PropN,True,f,sg,3,3.5,past,3.0
+Lori plays.,sv,PropN,True,f,sg,3,3.0,pres,4.5
+Lori sings.,sv,PropN,True,f,sg,3,3.0,pres,3.5
+Lori sneezes.,sv,PropN,True,f,sg,3,3.0,pres,2.5
+Lori played.,sv,PropN,True,f,sg,3,3.0,past,4.5
+Lori sang.,sv,PropN,True,f,sg,3,3.0,past,3.5
+Lori sneezed.,sv,PropN,True,f,sg,3,3.0,past,2.5
+Lori falls.,sv,PropN,True,f,sg,3,3.0,pres,4.5
+Lori disappears.,sv,PropN,True,f,sg,3,3.0,pres,3.5
+Lori vanishes.,sv,PropN,True,f,sg,3,3.0,pres,3.0
+Lori fell.,sv,PropN,True,f,sg,3,3.0,past,4.5
+Lori disappeared.,sv,PropN,True,f,sg,3,3.0,past,3.5
+Lori vanished.,sv,PropN,True,f,sg,3,3.0,past,3.0
+John plays.,sv,PropN,True,m,sg,3,5.0,pres,4.5
+John sings.,sv,PropN,True,m,sg,3,5.0,pres,3.5
+John sneezes.,sv,PropN,True,m,sg,3,5.0,pres,2.5
+John played.,sv,PropN,True,m,sg,3,5.0,past,4.5
+John sang.,sv,PropN,True,m,sg,3,5.0,past,3.5
+John sneezed.,sv,PropN,True,m,sg,3,5.0,past,2.5
+John falls.,sv,PropN,True,m,sg,3,5.0,pres,4.5
+John disappears.,sv,PropN,True,m,sg,3,5.0,pres,3.5
+John vanishes.,sv,PropN,True,m,sg,3,5.0,pres,3.0
+John fell.,sv,PropN,True,m,sg,3,5.0,past,4.5
+John disappeared.,sv,PropN,True,m,sg,3,5.0,past,3.5
+John vanished.,sv,PropN,True,m,sg,3,5.0,past,3.0
+Bob plays.,sv,PropN,True,m,sg,3,4.5,pres,4.5
+Bob sings.,sv,PropN,True,m,sg,3,4.5,pres,3.5
+Bob sneezes.,sv,PropN,True,m,sg,3,4.5,pres,2.5
+Bob played.,sv,PropN,True,m,sg,3,4.5,past,4.5
+Bob sang.,sv,PropN,True,m,sg,3,4.5,past,3.5
+Bob sneezed.,sv,PropN,True,m,sg,3,4.5,past,2.5
+Bob falls.,sv,PropN,True,m,sg,3,4.5,pres,4.5
+Bob disappears.,sv,PropN,True,m,sg,3,4.5,pres,3.5
+Bob vanishes.,sv,PropN,True,m,sg,3,4.5,pres,3.0
+Bob fell.,sv,PropN,True,m,sg,3,4.5,past,4.5
+Bob disappeared.,sv,PropN,True,m,sg,3,4.5,past,3.5
+Bob vanished.,sv,PropN,True,m,sg,3,4.5,past,3.0
+Lex plays.,sv,PropN,True,m,sg,3,3.5,pres,4.5
+Lex sings.,sv,PropN,True,m,sg,3,3.5,pres,3.5
+Lex sneezes.,sv,PropN,True,m,sg,3,3.5,pres,2.5
+Lex played.,sv,PropN,True,m,sg,3,3.5,past,4.5
+Lex sang.,sv,PropN,True,m,sg,3,3.5,past,3.5
+Lex sneezed.,sv,PropN,True,m,sg,3,3.5,past,2.5
+Lex falls.,sv,PropN,True,m,sg,3,3.5,pres,4.5
+Lex disappears.,sv,PropN,True,m,sg,3,3.5,pres,3.5
+Lex vanishes.,sv,PropN,True,m,sg,3,3.5,pres,3.0
+Lex fell.,sv,PropN,True,m,sg,3,3.5,past,4.5
+Lex disappeared.,sv,PropN,True,m,sg,3,3.5,past,3.5
+Lex vanished.,sv,PropN,True,m,sg,3,3.5,past,3.0
+the woman plays.,sv,N,True,f,sg,3,5.0,pres,4.5
+the woman sings.,sv,N,True,f,sg,3,5.0,pres,3.5
+the woman sneezes.,sv,N,True,f,sg,3,5.0,pres,2.5
+the woman played.,sv,N,True,f,sg,3,5.0,past,4.5
+the woman sang.,sv,N,True,f,sg,3,5.0,past,3.5
+the woman sneezed.,sv,N,True,f,sg,3,5.0,past,2.5
+the woman falls.,sv,N,True,f,sg,3,5.0,pres,4.5
+the woman disappears.,sv,N,True,f,sg,3,5.0,pres,3.5
+the woman vanishes.,sv,N,True,f,sg,3,5.0,pres,3.0
+the woman fell.,sv,N,True,f,sg,3,5.0,past,4.5
+the woman disappeared.,sv,N,True,f,sg,3,5.0,past,3.5
+the woman vanished.,sv,N,True,f,sg,3,5.0,past,3.0
+the princess plays.,sv,N,True,f,sg,3,4.5,pres,4.5
+the princess sings.,sv,N,True,f,sg,3,4.5,pres,3.5
+the princess sneezes.,sv,N,True,f,sg,3,4.5,pres,2.5
+the princess played.,sv,N,True,f,sg,3,4.5,past,4.5
+the princess sang.,sv,N,True,f,sg,3,4.5,past,3.5
+the princess sneezed.,sv,N,True,f,sg,3,4.5,past,2.5
+the princess falls.,sv,N,True,f,sg,3,4.5,pres,4.5
+the princess disappears.,sv,N,True,f,sg,3,4.5,pres,3.5
+the princess vanishes.,sv,N,True,f,sg,3,4.5,pres,3.0
+the princess fell.,sv,N,True,f,sg,3,4.5,past,4.5
+the princess disappeared.,sv,N,True,f,sg,3,4.5,past,3.5
+the princess vanished.,sv,N,True,f,sg,3,4.5,past,3.0
+the actress plays.,sv,N,True,f,sg,3,4.0,pres,4.5
+the actress sings.,sv,N,True,f,sg,3,4.0,pres,3.5
+the actress sneezes.,sv,N,True,f,sg,3,4.0,pres,2.5
+the actress played.,sv,N,True,f,sg,3,4.0,past,4.5
+the actress sang.,sv,N,True,f,sg,3,4.0,past,3.5
+the actress sneezed.,sv,N,True,f,sg,3,4.0,past,2.5
+the actress falls.,sv,N,True,f,sg,3,4.0,pres,4.5
+the actress disappears.,sv,N,True,f,sg,3,4.0,pres,3.5
+the actress vanishes.,sv,N,True,f,sg,3,4.0,pres,3.0
+the actress fell.,sv,N,True,f,sg,3,4.0,past,4.5
+the actress disappeared.,sv,N,True,f,sg,3,4.0,past,3.5
+the actress vanished.,sv,N,True,f,sg,3,4.0,past,3.0
+the man plays.,sv,N,True,m,sg,3,5.5,pres,4.5
+the man sings.,sv,N,True,m,sg,3,5.5,pres,3.5
+the man sneezes.,sv,N,True,m,sg,3,5.5,pres,2.5
+the man played.,sv,N,True,m,sg,3,5.5,past,4.5
+the man sang.,sv,N,True,m,sg,3,5.5,past,3.5
+the man sneezed.,sv,N,True,m,sg,3,5.5,past,2.5
+the man falls.,sv,N,True,m,sg,3,5.5,pres,4.5
+the man disappears.,sv,N,True,m,sg,3,5.5,pres,3.5
+the man vanishes.,sv,N,True,m,sg,3,5.5,pres,3.0
+the man fell.,sv,N,True,m,sg,3,5.5,past,4.5
+the man disappeared.,sv,N,True,m,sg,3,5.5,past,3.5
+the man vanished.,sv,N,True,m,sg,3,5.5,past,3.0
+the prince plays.,sv,N,True,m,sg,3,4.5,pres,4.5
+the prince sings.,sv,N,True,m,sg,3,4.5,pres,3.5
+the prince sneezes.,sv,N,True,m,sg,3,4.5,pres,2.5
+the prince played.,sv,N,True,m,sg,3,4.5,past,4.5
+the prince sang.,sv,N,True,m,sg,3,4.5,past,3.5
+the prince sneezed.,sv,N,True,m,sg,3,4.5,past,2.5
+the prince falls.,sv,N,True,m,sg,3,4.5,pres,4.5
+the prince disappears.,sv,N,True,m,sg,3,4.5,pres,3.5
+the prince vanishes.,sv,N,True,m,sg,3,4.5,pres,3.0
+the prince fell.,sv,N,True,m,sg,3,4.5,past,4.5
+the prince disappeared.,sv,N,True,m,sg,3,4.5,past,3.5
+the prince vanished.,sv,N,True,m,sg,3,4.5,past,3.0
+the actor plays.,sv,N,True,m,sg,3,4.5,pres,4.5
+the actor sings.,sv,N,True,m,sg,3,4.5,pres,3.5
+the actor sneezes.,sv,N,True,m,sg,3,4.5,pres,2.5
+the actor played.,sv,N,True,m,sg,3,4.5,past,4.5
+the actor sang.,sv,N,True,m,sg,3,4.5,past,3.5
+the actor sneezed.,sv,N,True,m,sg,3,4.5,past,2.5
+the actor falls.,sv,N,True,m,sg,3,4.5,pres,4.5
+the actor disappears.,sv,N,True,m,sg,3,4.5,pres,3.5
+the actor vanishes.,sv,N,True,m,sg,3,4.5,pres,3.0
+the actor fell.,sv,N,True,m,sg,3,4.5,past,4.5
+the actor disappeared.,sv,N,True,m,sg,3,4.5,past,3.5
+the actor vanished.,sv,N,True,m,sg,3,4.5,past,3.0
+the women play.,sv,N,True,f,pl,3,5.0,pres,4.5
+the women sing.,sv,N,True,f,pl,3,5.0,pres,3.5
+the women sneeze.,sv,N,True,f,pl,3,5.0,pres,2.5
+the women played.,sv,N,True,f,pl,3,5.0,past,4.5
+the women sang.,sv,N,True,f,pl,3,5.0,past,3.5
+the women sneezed.,sv,N,True,f,pl,3,5.0,past,2.5
+the women fall.,sv,N,True,f,pl,3,5.0,pres,4.5
+the women disappear.,sv,N,True,f,pl,3,5.0,pres,3.5
+the women vanish.,sv,N,True,f,pl,3,5.0,pres,3.0
+the women fell.,sv,N,True,f,pl,3,5.0,past,4.5
+the women disappeared.,sv,N,True,f,pl,3,5.0,past,3.5
+the women vanished.,sv,N,True,f,pl,3,5.0,past,3.0
+the princesses play.,sv,N,True,f,pl,3,4.5,pres,4.5
+the princesses sing.,sv,N,True,f,pl,3,4.5,pres,3.5
+the princesses sneeze.,sv,N,True,f,pl,3,4.5,pres,2.5
+the princesses played.,sv,N,True,f,pl,3,4.5,past,4.5
+the princesses sang.,sv,N,True,f,pl,3,4.5,past,3.5
+the princesses sneezed.,sv,N,True,f,pl,3,4.5,past,2.5
+the princesses fall.,sv,N,True,f,pl,3,4.5,pres,4.5
+the princesses disappear.,sv,N,True,f,pl,3,4.5,pres,3.5
+the princesses vanish.,sv,N,True,f,pl,3,4.5,pres,3.0
+the princesses fell.,sv,N,True,f,pl,3,4.5,past,4.5
+the princesses disappeared.,sv,N,True,f,pl,3,4.5,past,3.5
+the princesses vanished.,sv,N,True,f,pl,3,4.5,past,3.0
+the actresses play.,sv,N,True,f,pl,3,4.0,pres,4.5
+the actresses sing.,sv,N,True,f,pl,3,4.0,pres,3.5
+the actresses sneeze.,sv,N,True,f,pl,3,4.0,pres,2.5
+the actresses played.,sv,N,True,f,pl,3,4.0,past,4.5
+the actresses sang.,sv,N,True,f,pl,3,4.0,past,3.5
+the actresses sneezed.,sv,N,True,f,pl,3,4.0,past,2.5
+the actresses fall.,sv,N,True,f,pl,3,4.0,pres,4.5
+the actresses disappear.,sv,N,True,f,pl,3,4.0,pres,3.5
+the actresses vanish.,sv,N,True,f,pl,3,4.0,pres,3.0
+the actresses fell.,sv,N,True,f,pl,3,4.0,past,4.5
+the actresses disappeared.,sv,N,True,f,pl,3,4.0,past,3.5
+the actresses vanished.,sv,N,True,f,pl,3,4.0,past,3.0
+the men play.,sv,N,True,m,pl,3,5.5,pres,4.5
+the men sing.,sv,N,True,m,pl,3,5.5,pres,3.5
+the men sneeze.,sv,N,True,m,pl,3,5.5,pres,2.5
+the men played.,sv,N,True,m,pl,3,5.5,past,4.5
+the men sang.,sv,N,True,m,pl,3,5.5,past,3.5
+the men sneezed.,sv,N,True,m,pl,3,5.5,past,2.5
+the men fall.,sv,N,True,m,pl,3,5.5,pres,4.5
+the men disappear.,sv,N,True,m,pl,3,5.5,pres,3.5
+the men vanish.,sv,N,True,m,pl,3,5.5,pres,3.0
+the men fell.,sv,N,True,m,pl,3,5.5,past,4.5
+the men disappeared.,sv,N,True,m,pl,3,5.5,past,3.5
+the men vanished.,sv,N,True,m,pl,3,5.5,past,3.0
+the princes play.,sv,N,True,m,pl,3,4.5,pres,4.5
+the princes sing.,sv,N,True,m,pl,3,4.5,pres,3.5
+the princes sneeze.,sv,N,True,m,pl,3,4.5,pres,2.5
+the princes played.,sv,N,True,m,pl,3,4.5,past,4.5
+the princes sang.,sv,N,True,m,pl,3,4.5,past,3.5
+the princes sneezed.,sv,N,True,m,pl,3,4.5,past,2.5
+the princes fall.,sv,N,True,m,pl,3,4.5,pres,4.5
+the princes disappear.,sv,N,True,m,pl,3,4.5,pres,3.5
+the princes vanish.,sv,N,True,m,pl,3,4.5,pres,3.0
+the princes fell.,sv,N,True,m,pl,3,4.5,past,4.5
+the princes disappeared.,sv,N,True,m,pl,3,4.5,past,3.5
+the princes vanished.,sv,N,True,m,pl,3,4.5,past,3.0
+the actors play.,sv,N,True,m,pl,3,4.5,pres,4.5
+the actors sing.,sv,N,True,m,pl,3,4.5,pres,3.5
+the actors sneeze.,sv,N,True,m,pl,3,4.5,pres,2.5
+the actors played.,sv,N,True,m,pl,3,4.5,past,4.5
+the actors sang.,sv,N,True,m,pl,3,4.5,past,3.5
+the actors sneezed.,sv,N,True,m,pl,3,4.5,past,2.5
+the actors fall.,sv,N,True,m,pl,3,4.5,pres,4.5
+the actors disappear.,sv,N,True,m,pl,3,4.5,pres,3.5
+the actors vanish.,sv,N,True,m,pl,3,4.5,pres,3.0
+the actors fell.,sv,N,True,m,pl,3,4.5,past,4.5
+the actors disappeared.,sv,N,True,m,pl,3,4.5,past,3.5
+the actors vanished.,sv,N,True,m,pl,3,4.5,past,3.0
+the book falls.,sv,N,False,,sg,3,5.0,pres,4.5
+the book disappears.,sv,N,False,,sg,3,5.0,pres,3.5
+the book vanishes.,sv,N,False,,sg,3,5.0,pres,3.0
+the book fell.,sv,N,False,,sg,3,5.0,past,4.5
+the book disappeared.,sv,N,False,,sg,3,5.0,past,3.5
+the book vanished.,sv,N,False,,sg,3,5.0,past,3.0
+the plate falls.,sv,N,False,,sg,3,4.5,pres,4.5
+the plate disappears.,sv,N,False,,sg,3,4.5,pres,3.5
+the plate vanishes.,sv,N,False,,sg,3,4.5,pres,3.0
+the plate fell.,sv,N,False,,sg,3,4.5,past,4.5
+the plate disappeared.,sv,N,False,,sg,3,4.5,past,3.5
+the plate vanished.,sv,N,False,,sg,3,4.5,past,3.0
+the pencil falls.,sv,N,False,,sg,3,3.5,pres,4.5
+the pencil disappears.,sv,N,False,,sg,3,3.5,pres,3.5
+the pencil vanishes.,sv,N,False,,sg,3,3.5,pres,3.0
+the pencil fell.,sv,N,False,,sg,3,3.5,past,4.5
+the pencil disappeared.,sv,N,False,,sg,3,3.5,past,3.5
+the pencil vanished.,sv,N,False,,sg,3,3.5,past,3.0
+the books fall.,sv,N,False,,pl,3,5.0,pres,4.5
+the books disappear.,sv,N,False,,pl,3,5.0,pres,3.5
+the books vanish.,sv,N,False,,pl,3,5.0,pres,3.0
+the books fell.,sv,N,False,,pl,3,5.0,past,4.5
+the books disappeared.,sv,N,False,,pl,3,5.0,past,3.5
+the books vanished.,sv,N,False,,pl,3,5.0,past,3.0
+the plates fall.,sv,N,False,,pl,3,4.5,pres,4.5
+the plates disappear.,sv,N,False,,pl,3,4.5,pres,3.5
+the plates vanish.,sv,N,False,,pl,3,4.5,pres,3.0
+the plates fell.,sv,N,False,,pl,3,4.5,past,4.5
+the plates disappeared.,sv,N,False,,pl,3,4.5,past,3.5
+the plates vanished.,sv,N,False,,pl,3,4.5,past,3.0
+the pencils fall.,sv,N,False,,pl,3,3.5,pres,4.5
+the pencils disappear.,sv,N,False,,pl,3,3.5,pres,3.5
+the pencils vanish.,sv,N,False,,pl,3,3.5,pres,3.0
+the pencils fell.,sv,N,False,,pl,3,3.5,past,4.5
+the pencils disappeared.,sv,N,False,,pl,3,3.5,past,3.5
+the pencils vanished.,sv,N,False,,pl,3,3.5,past,3.0
+I play.,sv,PRO,True,,sg,1,7.0,pres,4.5
+I sing.,sv,PRO,True,,sg,1,7.0,pres,3.5
+I sneeze.,sv,PRO,True,,sg,1,7.0,pres,2.5
+I played.,sv,PRO,True,,sg,1,7.0,past,4.5
+I sang.,sv,PRO,True,,sg,1,7.0,past,3.5
+I sneezed.,sv,PRO,True,,sg,1,7.0,past,2.5
+I fall.,sv,PRO,True,,sg,1,7.0,pres,4.5
+I disappear.,sv,PRO,True,,sg,1,7.0,pres,3.5
+I vanish.,sv,PRO,True,,sg,1,7.0,pres,3.0
+I fell.,sv,PRO,True,,sg,1,7.0,past,4.5
+I disappeared.,sv,PRO,True,,sg,1,7.0,past,3.5
+I vanished.,sv,PRO,True,,sg,1,7.0,past,3.0
+you play.,sv,PRO,True,,,2,6.5,pres,4.5
+you sing.,sv,PRO,True,,,2,6.5,pres,3.5
+you sneeze.,sv,PRO,True,,,2,6.5,pres,2.5
+you played.,sv,PRO,True,,,2,6.5,past,4.5
+you sang.,sv,PRO,True,,,2,6.5,past,3.5
+you sneezed.,sv,PRO,True,,,2,6.5,past,2.5
+you fall.,sv,PRO,True,,,2,6.5,pres,4.5
+you disappear.,sv,PRO,True,,,2,6.5,pres,3.5
+you vanish.,sv,PRO,True,,,2,6.5,pres,3.0
+you fell.,sv,PRO,True,,,2,6.5,past,4.5
+you disappeared.,sv,PRO,True,,,2,6.5,past,3.5
+you vanished.,sv,PRO,True,,,2,6.5,past,3.0
+he plays.,sv,PRO,True,m,sg,3,6.5,pres,4.5
+he sings.,sv,PRO,True,m,sg,3,6.5,pres,3.5
+he sneezes.,sv,PRO,True,m,sg,3,6.5,pres,2.5
+he played.,sv,PRO,True,m,sg,3,6.5,past,4.5
+he sang.,sv,PRO,True,m,sg,3,6.5,past,3.5
+he sneezed.,sv,PRO,True,m,sg,3,6.5,past,2.5
+he falls.,sv,PRO,True,m,sg,3,6.5,pres,4.5
+he disappears.,sv,PRO,True,m,sg,3,6.5,pres,3.5
+he vanishes.,sv,PRO,True,m,sg,3,6.5,pres,3.0
+he fell.,sv,PRO,True,m,sg,3,6.5,past,4.5
+he disappeared.,sv,PRO,True,m,sg,3,6.5,past,3.5
+he vanished.,sv,PRO,True,m,sg,3,6.5,past,3.0
+she plays.,sv,PRO,True,f,sg,3,6.0,pres,4.5
+she sings.,sv,PRO,True,f,sg,3,6.0,pres,3.5
+she sneezes.,sv,PRO,True,f,sg,3,6.0,pres,2.5
+she played.,sv,PRO,True,f,sg,3,6.0,past,4.5
+she sang.,sv,PRO,True,f,sg,3,6.0,past,3.5
+she sneezed.,sv,PRO,True,f,sg,3,6.0,past,2.5
+she falls.,sv,PRO,True,f,sg,3,6.0,pres,4.5
+she disappears.,sv,PRO,True,f,sg,3,6.0,pres,3.5
+she vanishes.,sv,PRO,True,f,sg,3,6.0,pres,3.0
+she fell.,sv,PRO,True,f,sg,3,6.0,past,4.5
+she disappeared.,sv,PRO,True,f,sg,3,6.0,past,3.5
+she vanished.,sv,PRO,True,f,sg,3,6.0,past,3.0
+it falls.,sv,PRO,False,,sg,3,6.5,pres,4.5
+it disappears.,sv,PRO,False,,sg,3,6.5,pres,3.5
+it vanishes.,sv,PRO,False,,sg,3,6.5,pres,3.0
+it fell.,sv,PRO,False,,sg,3,6.5,past,4.5
+it disappeared.,sv,PRO,False,,sg,3,6.5,past,3.5
+it vanished.,sv,PRO,False,,sg,3,6.5,past,3.0
+we play.,sv,PRO,True,,pl,1,6.5,pres,4.5
+we sing.,sv,PRO,True,,pl,1,6.5,pres,3.5
+we sneeze.,sv,PRO,True,,pl,1,6.5,pres,2.5
+we played.,sv,PRO,True,,pl,1,6.5,past,4.5
+we sang.,sv,PRO,True,,pl,1,6.5,past,3.5
+we sneezed.,sv,PRO,True,,pl,1,6.5,past,2.5
+we fall.,sv,PRO,True,,pl,1,6.5,pres,4.5
+we disappear.,sv,PRO,True,,pl,1,6.5,pres,3.5
+we vanish.,sv,PRO,True,,pl,1,6.5,pres,3.0
+we fell.,sv,PRO,True,,pl,1,6.5,past,4.5
+we disappeared.,sv,PRO,True,,pl,1,6.5,past,3.5
+we vanished.,sv,PRO,True,,pl,1,6.5,past,3.0
+they play.,sv,PRO,True,,pl,3,6.5,pres,4.5
+they sing.,sv,PRO,True,,pl,3,6.5,pres,3.5
+they sneeze.,sv,PRO,True,,pl,3,6.5,pres,2.5
+they played.,sv,PRO,True,,pl,3,6.5,past,4.5
+they sang.,sv,PRO,True,,pl,3,6.5,past,3.5
+they sneezed.,sv,PRO,True,,pl,3,6.5,past,2.5
+they fall.,sv,PRO,True,,pl,3,6.5,pres,4.5
+they disappear.,sv,PRO,True,,pl,3,6.5,pres,3.5
+they vanish.,sv,PRO,True,,pl,3,6.5,pres,3.0
+they fell.,sv,PRO,True,,pl,3,6.5,past,4.5
+they disappeared.,sv,PRO,True,,pl,3,6.5,past,3.5
+they vanished.,sv,PRO,True,,pl,3,6.5,past,3.0
+who plays?,question,PRO,True,,,3,6.0,pres,4.5
+who sings?,question,PRO,True,,,3,6.0,pres,3.5
+who sneezes?,question,PRO,True,,,3,6.0,pres,2.5
+who played?,question,PRO,True,,,3,6.0,past,4.5
+who sang?,question,PRO,True,,,3,6.0,past,3.5
+who sneezed?,question,PRO,True,,,3,6.0,past,2.5
+who falls?,question,PRO,True,,,3,6.0,pres,4.5
+who disappears?,question,PRO,True,,,3,6.0,pres,3.5
+who vanishes?,question,PRO,True,,,3,6.0,pres,3.0
+who fell?,question,PRO,True,,,3,6.0,past,4.5
+who disappeared?,question,PRO,True,,,3,6.0,past,3.5
+who vanished?,question,PRO,True,,,3,6.0,past,3.0
+which woman plays?,question,N,True,f,sg,3,5.0,pres,4.5
+which woman sings?,question,N,True,f,sg,3,5.0,pres,3.5
+which woman sneezes?,question,N,True,f,sg,3,5.0,pres,2.5
+which woman played?,question,N,True,f,sg,3,5.0,past,4.5
+which woman sang?,question,N,True,f,sg,3,5.0,past,3.5
+which woman sneezed?,question,N,True,f,sg,3,5.0,past,2.5
+which woman falls?,question,N,True,f,sg,3,5.0,pres,4.5
+which woman disappears?,question,N,True,f,sg,3,5.0,pres,3.5
+which woman vanishes?,question,N,True,f,sg,3,5.0,pres,3.0
+which woman fell?,question,N,True,f,sg,3,5.0,past,4.5
+which woman disappeared?,question,N,True,f,sg,3,5.0,past,3.5
+which woman vanished?,question,N,True,f,sg,3,5.0,past,3.0
+which princess plays?,question,N,True,f,sg,3,4.5,pres,4.5
+which princess sings?,question,N,True,f,sg,3,4.5,pres,3.5
+which princess sneezes?,question,N,True,f,sg,3,4.5,pres,2.5
+which princess played?,question,N,True,f,sg,3,4.5,past,4.5
+which princess sang?,question,N,True,f,sg,3,4.5,past,3.5
+which princess sneezed?,question,N,True,f,sg,3,4.5,past,2.5
+which princess falls?,question,N,True,f,sg,3,4.5,pres,4.5
+which princess disappears?,question,N,True,f,sg,3,4.5,pres,3.5
+which princess vanishes?,question,N,True,f,sg,3,4.5,pres,3.0
+which princess fell?,question,N,True,f,sg,3,4.5,past,4.5
+which princess disappeared?,question,N,True,f,sg,3,4.5,past,3.5
+which princess vanished?,question,N,True,f,sg,3,4.5,past,3.0
+which actress plays?,question,N,True,f,sg,3,4.0,pres,4.5
+which actress sings?,question,N,True,f,sg,3,4.0,pres,3.5
+which actress sneezes?,question,N,True,f,sg,3,4.0,pres,2.5
+which actress played?,question,N,True,f,sg,3,4.0,past,4.5
+which actress sang?,question,N,True,f,sg,3,4.0,past,3.5
+which actress sneezed?,question,N,True,f,sg,3,4.0,past,2.5
+which actress falls?,question,N,True,f,sg,3,4.0,pres,4.5
+which actress disappears?,question,N,True,f,sg,3,4.0,pres,3.5
+which actress vanishes?,question,N,True,f,sg,3,4.0,pres,3.0
+which actress fell?,question,N,True,f,sg,3,4.0,past,4.5
+which actress disappeared?,question,N,True,f,sg,3,4.0,past,3.5
+which actress vanished?,question,N,True,f,sg,3,4.0,past,3.0
+which man plays?,question,N,True,m,sg,3,5.5,pres,4.5
+which man sings?,question,N,True,m,sg,3,5.5,pres,3.5
+which man sneezes?,question,N,True,m,sg,3,5.5,pres,2.5
+which man played?,question,N,True,m,sg,3,5.5,past,4.5
+which man sang?,question,N,True,m,sg,3,5.5,past,3.5
+which man sneezed?,question,N,True,m,sg,3,5.5,past,2.5
+which man falls?,question,N,True,m,sg,3,5.5,pres,4.5
+which man disappears?,question,N,True,m,sg,3,5.5,pres,3.5
+which man vanishes?,question,N,True,m,sg,3,5.5,pres,3.0
+which man fell?,question,N,True,m,sg,3,5.5,past,4.5
+which man disappeared?,question,N,True,m,sg,3,5.5,past,3.5
+which man vanished?,question,N,True,m,sg,3,5.5,past,3.0
+which prince plays?,question,N,True,m,sg,3,4.5,pres,4.5
+which prince sings?,question,N,True,m,sg,3,4.5,pres,3.5
+which prince sneezes?,question,N,True,m,sg,3,4.5,pres,2.5
+which prince played?,question,N,True,m,sg,3,4.5,past,4.5
+which prince sang?,question,N,True,m,sg,3,4.5,past,3.5
+which prince sneezed?,question,N,True,m,sg,3,4.5,past,2.5
+which prince falls?,question,N,True,m,sg,3,4.5,pres,4.5
+which prince disappears?,question,N,True,m,sg,3,4.5,pres,3.5
+which prince vanishes?,question,N,True,m,sg,3,4.5,pres,3.0
+which prince fell?,question,N,True,m,sg,3,4.5,past,4.5
+which prince disappeared?,question,N,True,m,sg,3,4.5,past,3.5
+which prince vanished?,question,N,True,m,sg,3,4.5,past,3.0
+which actor plays?,question,N,True,m,sg,3,4.5,pres,4.5
+which actor sings?,question,N,True,m,sg,3,4.5,pres,3.5
+which actor sneezes?,question,N,True,m,sg,3,4.5,pres,2.5
+which actor played?,question,N,True,m,sg,3,4.5,past,4.5
+which actor sang?,question,N,True,m,sg,3,4.5,past,3.5
+which actor sneezed?,question,N,True,m,sg,3,4.5,past,2.5
+which actor falls?,question,N,True,m,sg,3,4.5,pres,4.5
+which actor disappears?,question,N,True,m,sg,3,4.5,pres,3.5
+which actor vanishes?,question,N,True,m,sg,3,4.5,pres,3.0
+which actor fell?,question,N,True,m,sg,3,4.5,past,4.5
+which actor disappeared?,question,N,True,m,sg,3,4.5,past,3.5
+which actor vanished?,question,N,True,m,sg,3,4.5,past,3.0
+which women play?,question,N,True,f,pl,3,5.0,pres,4.5
+which women sing?,question,N,True,f,pl,3,5.0,pres,3.5
+which women sneeze?,question,N,True,f,pl,3,5.0,pres,2.5
+which women played?,question,N,True,f,pl,3,5.0,past,4.5
+which women sang?,question,N,True,f,pl,3,5.0,past,3.5
+which women sneezed?,question,N,True,f,pl,3,5.0,past,2.5
+which women fall?,question,N,True,f,pl,3,5.0,pres,4.5
+which women disappear?,question,N,True,f,pl,3,5.0,pres,3.5
+which women vanish?,question,N,True,f,pl,3,5.0,pres,3.0
+which women fell?,question,N,True,f,pl,3,5.0,past,4.5
+which women disappeared?,question,N,True,f,pl,3,5.0,past,3.5
+which women vanished?,question,N,True,f,pl,3,5.0,past,3.0
+which princesses play?,question,N,True,f,pl,3,4.5,pres,4.5
+which princesses sing?,question,N,True,f,pl,3,4.5,pres,3.5
+which princesses sneeze?,question,N,True,f,pl,3,4.5,pres,2.5
+which princesses played?,question,N,True,f,pl,3,4.5,past,4.5
+which princesses sang?,question,N,True,f,pl,3,4.5,past,3.5
+which princesses sneezed?,question,N,True,f,pl,3,4.5,past,2.5
+which princesses fall?,question,N,True,f,pl,3,4.5,pres,4.5
+which princesses disappear?,question,N,True,f,pl,3,4.5,pres,3.5
+which princesses vanish?,question,N,True,f,pl,3,4.5,pres,3.0
+which princesses fell?,question,N,True,f,pl,3,4.5,past,4.5
+which princesses disappeared?,question,N,True,f,pl,3,4.5,past,3.5
+which princesses vanished?,question,N,True,f,pl,3,4.5,past,3.0
+which actresses play?,question,N,True,f,pl,3,4.0,pres,4.5
+which actresses sing?,question,N,True,f,pl,3,4.0,pres,3.5
+which actresses sneeze?,question,N,True,f,pl,3,4.0,pres,2.5
+which actresses played?,question,N,True,f,pl,3,4.0,past,4.5
+which actresses sang?,question,N,True,f,pl,3,4.0,past,3.5
+which actresses sneezed?,question,N,True,f,pl,3,4.0,past,2.5
+which actresses fall?,question,N,True,f,pl,3,4.0,pres,4.5
+which actresses disappear?,question,N,True,f,pl,3,4.0,pres,3.5
+which actresses vanish?,question,N,True,f,pl,3,4.0,pres,3.0
+which actresses fell?,question,N,True,f,pl,3,4.0,past,4.5
+which actresses disappeared?,question,N,True,f,pl,3,4.0,past,3.5
+which actresses vanished?,question,N,True,f,pl,3,4.0,past,3.0
+which men play?,question,N,True,m,pl,3,5.5,pres,4.5
+which men sing?,question,N,True,m,pl,3,5.5,pres,3.5
+which men sneeze?,question,N,True,m,pl,3,5.5,pres,2.5
+which men played?,question,N,True,m,pl,3,5.5,past,4.5
+which men sang?,question,N,True,m,pl,3,5.5,past,3.5
+which men sneezed?,question,N,True,m,pl,3,5.5,past,2.5
+which men fall?,question,N,True,m,pl,3,5.5,pres,4.5
+which men disappear?,question,N,True,m,pl,3,5.5,pres,3.5
+which men vanish?,question,N,True,m,pl,3,5.5,pres,3.0
+which men fell?,question,N,True,m,pl,3,5.5,past,4.5
+which men disappeared?,question,N,True,m,pl,3,5.5,past,3.5
+which men vanished?,question,N,True,m,pl,3,5.5,past,3.0
+which princes play?,question,N,True,m,pl,3,4.5,pres,4.5
+which princes sing?,question,N,True,m,pl,3,4.5,pres,3.5
+which princes sneeze?,question,N,True,m,pl,3,4.5,pres,2.5
+which princes played?,question,N,True,m,pl,3,4.5,past,4.5
+which princes sang?,question,N,True,m,pl,3,4.5,past,3.5
+which princes sneezed?,question,N,True,m,pl,3,4.5,past,2.5
+which princes fall?,question,N,True,m,pl,3,4.5,pres,4.5
+which princes disappear?,question,N,True,m,pl,3,4.5,pres,3.5
+which princes vanish?,question,N,True,m,pl,3,4.5,pres,3.0
+which princes fell?,question,N,True,m,pl,3,4.5,past,4.5
+which princes disappeared?,question,N,True,m,pl,3,4.5,past,3.5
+which princes vanished?,question,N,True,m,pl,3,4.5,past,3.0
+which actors play?,question,N,True,m,pl,3,4.5,pres,4.5
+which actors sing?,question,N,True,m,pl,3,4.5,pres,3.5
+which actors sneeze?,question,N,True,m,pl,3,4.5,pres,2.5
+which actors played?,question,N,True,m,pl,3,4.5,past,4.5
+which actors sang?,question,N,True,m,pl,3,4.5,past,3.5
+which actors sneezed?,question,N,True,m,pl,3,4.5,past,2.5
+which actors fall?,question,N,True,m,pl,3,4.5,pres,4.5
+which actors disappear?,question,N,True,m,pl,3,4.5,pres,3.5
+which actors vanish?,question,N,True,m,pl,3,4.5,pres,3.0
+which actors fell?,question,N,True,m,pl,3,4.5,past,4.5
+which actors disappeared?,question,N,True,m,pl,3,4.5,past,3.5
+which actors vanished?,question,N,True,m,pl,3,4.5,past,3.0
+which book falls?,question,N,False,,sg,3,5.0,pres,4.5
+which book disappears?,question,N,False,,sg,3,5.0,pres,3.5
+which book vanishes?,question,N,False,,sg,3,5.0,pres,3.0
+which book fell?,question,N,False,,sg,3,5.0,past,4.5
+which book disappeared?,question,N,False,,sg,3,5.0,past,3.5
+which book vanished?,question,N,False,,sg,3,5.0,past,3.0
+which plate falls?,question,N,False,,sg,3,4.5,pres,4.5
+which plate disappears?,question,N,False,,sg,3,4.5,pres,3.5
+which plate vanishes?,question,N,False,,sg,3,4.5,pres,3.0
+which plate fell?,question,N,False,,sg,3,4.5,past,4.5
+which plate disappeared?,question,N,False,,sg,3,4.5,past,3.5
+which plate vanished?,question,N,False,,sg,3,4.5,past,3.0
+which pencil falls?,question,N,False,,sg,3,3.5,pres,4.5
+which pencil disappears?,question,N,False,,sg,3,3.5,pres,3.5
+which pencil vanishes?,question,N,False,,sg,3,3.5,pres,3.0
+which pencil fell?,question,N,False,,sg,3,3.5,past,4.5
+which pencil disappeared?,question,N,False,,sg,3,3.5,past,3.5
+which pencil vanished?,question,N,False,,sg,3,3.5,past,3.0
+which books fall?,question,N,False,,pl,3,5.0,pres,4.5
+which books disappear?,question,N,False,,pl,3,5.0,pres,3.5
+which books vanish?,question,N,False,,pl,3,5.0,pres,3.0
+which books fell?,question,N,False,,pl,3,5.0,past,4.5
+which books disappeared?,question,N,False,,pl,3,5.0,past,3.5
+which books vanished?,question,N,False,,pl,3,5.0,past,3.0
+which plates fall?,question,N,False,,pl,3,4.5,pres,4.5
+which plates disappear?,question,N,False,,pl,3,4.5,pres,3.5
+which plates vanish?,question,N,False,,pl,3,4.5,pres,3.0
+which plates fell?,question,N,False,,pl,3,4.5,past,4.5
+which plates disappeared?,question,N,False,,pl,3,4.5,past,3.5
+which plates vanished?,question,N,False,,pl,3,4.5,past,3.0
+which pencils fall?,question,N,False,,pl,3,3.5,pres,4.5
+which pencils disappear?,question,N,False,,pl,3,3.5,pres,3.5
+which pencils vanish?,question,N,False,,pl,3,3.5,pres,3.0
+which pencils fell?,question,N,False,,pl,3,3.5,past,4.5
+which pencils disappeared?,question,N,False,,pl,3,3.5,past,3.5
+which pencils vanished?,question,N,False,,pl,3,3.5,past,3.0

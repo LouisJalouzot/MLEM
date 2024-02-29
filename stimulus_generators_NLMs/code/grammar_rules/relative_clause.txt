@@ -1,0 +1,21 @@
+#SUBJ [who TRACE TRANS_VERB OBJ] TRANS_VERB OBJ: The man who hugs the girl watches the prince (center-embedding/subject-movement)
+#SUBJ [who SUBJ TRANS_VERB TRACE] TRANS_VERB OBJ: The man who the girl hugs watches the prince (center-embedding/object-movement)
+#SUBJ TRANS_VERB OBJ [who TRACE TRANS_VERB OBJ]: The man watches the prince who hugs the girl (right-branching/subject-movement)
+#SUBJ TRANS_VERB OBJ [who SUBJ TRANS_VERB TRACE]: The man watches the prince who the girl hugs (right-branching/object-movement)
+
+FullSentence[CLAUSE=?c, RC_attached=?r] -> S[CLAUSE=?c, RC_attached=?r]
+
+
+# Object attached RC
+S[RC_attached=peripheral, CLAUSE=?c] -> Det subj_N[NUM=?n, PERS=3, ANIM=true] verb_Trans[finite=true, NUM=?n, ANIM=true, PERS=3, TENSE=pres] Det obj_N[NUM=?o, PERS=3, ANIM=true] embedS[CLAUSE=?c, NUM=?o]
+
+# Subject attached RC
+S[RC_attached=center_embedding, CLAUSE=?c] -> Det subj_N[NUM=?n, PERS=3, ANIM=true] embedS[CLAUSE=?c, NUM=?n] verb_Trans[finite=true, NUM=?n, ANIM=true, PERS=3, TENSE=pres] Det obj_N[PERS=3, ANIM=true]
+
+
+# Embeddings
+# ex: ... who hugs the girl
+embedS[CLAUSE=subjwho, NUM=?o] -> who embedverb_Trans[finite=true, NUM=?o, ANIM=true, PERS=3, TENSE=pres] Det embedobj_N[PERS=3, ANIM=true]
+
+# ex: ... who the girl hugs
+embedS[CLAUSE=objwho, NUM=?n] -> who Det embedsubj_N[NUM=?o, ANIM=true] embedverb_Trans[finite=true, NUM=?o, PERS=3, ANIM=true, TENSE=pres]

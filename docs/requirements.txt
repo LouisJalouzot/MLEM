@@ -1,0 +1,9 @@
+sphinx
+sphinx-rtd-theme
+sphinx-copybutton
+loguru
+numpy
+matplotlib
+seaborn
+tqdm
+pandas

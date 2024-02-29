@@ -1,0 +1,12 @@
+FullSentence[PP_attached=?r] -> S[PP_attached=?r]
+
+# Object attached PP
+S[PP_attached=peripheral] -> Det subj_N[NUM=?n, PERS=3, ANIM=true] verb_Trans[finite=true, NUM=?n, ANIM=true, PERS=3, TENSE=pres] Det obj_N[NUM=?o, PERS=3, ANIM=true] embedS
+
+# Subject attached PP
+S[PP_attached=center_embedding] -> Det subj_N[NUM=?n, PERS=3, ANIM=true] embedS verb_Trans[finite=true, NUM=?n, ANIM=true, PERS=3, TENSE=pres] Det obj_N[PERS=3, ANIM=true]
+
+
+# PPs
+# ... near/behind the NOUN
+embedS -> prep_P Det embedobj_N[PERS=3, ANIM=true]

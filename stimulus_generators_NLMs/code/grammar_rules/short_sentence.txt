@@ -1,0 +1,17 @@
+# All sentences are without embedding
+# Direct sentences without embedding S[GROUP=sv]: 'Mary plays', 'the woman plays', etc.
+# Questions without embedding S[GROUP=question]: 'who plays ?', 'which woman plays ?', etc.
+
+S[GROUP=?g, TENSE=?t] -> subjNP[GROUP=?g, NUM=?n, PERS=?p, ANIM=?a] VPpunct[GROUP=?g, NUM=?n, PERS=?p, ANIM=?a, TENSE=?t]
+
+VPpunct[GROUP=sv, NUM=?n, PERS=?p, ANIM=?a, TENSE=?t] -> VP[NUM=?n, PERS=?p, ANIM=?a, TENSE=?t]
+VPpunct[GROUP=question, NUM=?n, PERS=?p, ANIM=?a, TENSE=?t] -> VP[NUM=?n, PERS=?p, ANIM=?a, TENSE=?t] QM
+
+VP[NUM=?n, PERS=?p, ANIM=?a, TENSE=?t] -> verb_Intrans[finite=true, NUM=?n, PERS=?p, ANIM=?a, TENSE=?t]
+
+subjNP[GROUP=sv, NUM=?n, PERS=?p, ANIM=?a] -> subj_PropN[NUM=?n, PERS=?p, ANIM=?a]
+subjNP[GROUP=sv, NUM=?n, PERS=?p, ANIM=?a] -> Det subj_N[NUM=?n, PERS=?p, ANIM=?a]
+subjNP[GROUP=sv, NUM=?n, PERS=?p, ANIM=?a] -> subj_PRO[NUM=?n, PERS=?p, ANIM=?a]
+
+subjNP[GROUP=question, NUM=sg, PERS=3, ANIM=?a] -> subj_who[NUM=?n, ANIM=?a]
+subjNP[GROUP=question, NUM=?n, PERS=?p, ANIM=?a] -> subj_which subj_N[NUM=?n, PERS=?p, ANIM=?a]

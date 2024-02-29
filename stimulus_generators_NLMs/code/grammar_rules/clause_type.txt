@@ -1,0 +1,21 @@
+S[EMBED=?e, CLAUSE=?c] -> tmp[EMBED=?e, CLAUSE=?c]
+
+tmp[EMBED=true, CLAUSE=?c] -> Det matrixsubj_N[NUM=?n, PERS=?p, ANIM=true] matrixverb_V[finite=true, NUM=?n, PERS=?p, ANIM=true] clauseS[EMBED=true, CLAUSE=?c]
+tmp[EMBED=false, CLAUSE=?c] -> clauseS[EMBED=false, CLAUSE=?c]
+
+VP[finite=?f, NUM=?n, ANIM=?a, PERS=?p] -> verb_Intrans[finite=?f, NUM=?n, ANIM=?a, PERS=?p, TENSE=pres]
+VP[finite=?f, NUM=?n, ANIM=?a, PERS=?p] -> verb_Trans[finite=?f, NUM=?n, ANIM=?a, PERS=?p, TENSE=pres] Det obj_N
+
+clauseS[EMBED=false, CLAUSE=that] -> Det subj_N[NUM=?n, ANIM=?a] VP[finite=true, NUM=?n, PERS=3, ANIM=?a]
+clauseS[EMBED=false, CLAUSE=whether] -> do_Aux[NUM=?n, PERS=3, TENSE=pres] Det subj_N[NUM=?n, ANIM=?a] verb_Trans[finite=false, ANIM=?a, TENSE=pres] QM
+clauseS[EMBED=false, CLAUSE=subjwho] -> who VP[finite=true, NUM=sg, PERS=3] QM
+clauseS[EMBED=false, CLAUSE=subjwhich] -> which subj_N[NUM=?n, ANIM=?a] VP[finite=true, NUM=?n, PERS=3, ANIM=?a] QM
+clauseS[EMBED=false, CLAUSE=objwho] -> who do_Aux[NUM=?n, PERS=3, TENSE=pres] Det subj_N[NUM=?n, ANIM=?a] verb_Trans[finite=false, ANIM=?a, TENSE=pres] QM
+clauseS[EMBED=false, CLAUSE=objwhich] -> which obj_N do_Aux[NUM=?n, PERS=3, TENSE=pres] Det subj_N[NUM=?n, ANIM=?a] verb_Trans[finite=false, ANIM=?a, TENSE=pres] QM
+
+clauseS[EMBED=true, CLAUSE=that] -> rel_That Det subj_N[NUM=?n, ANIM=?a] embedVP[finite=true, NUM=?n, PERS=3, ANIM=?a, TENSE=pres]
+clauseS[EMBED=true, CLAUSE=whether] -> rel_Whether Det subj_N[NUM=?n, ANIM=?a] VP[finite=true, NUM=?n, ANIM=?a, PERS=3, TENSE=pres]
+clauseS[EMBED=true, CLAUSE=subjwho] -> who VP[finite=true, NUM=sg, PERS=3, TENSE=pres]
+clauseS[EMBED=true, CLAUSE=subjwhich] -> which subj_N[NUM=?n, ANIM=?a] VP[finite=true, NUM=?n, PERS=3, ANIM=?a, TENSE=pres]
+clauseS[EMBED=true, CLAUSE=objwho] -> who Det subj_N[NUM=?n, ANIM=?a] verb_Trans[finite=true, NUM=?n, ANIM=?a, PERS=3, TENSE=pres]
+clauseS[EMBED=true, CLAUSE=objwhich] -> which obj_N Det subj_N[NUM=?n, ANIM=?a] verb_Trans[finite=true, NUM=?n, ANIM=?a, PERS=3, TENSE=pres]

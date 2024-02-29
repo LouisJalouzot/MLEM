@@ -1,0 +1,11 @@
+loguru
+numpy
+matplotlib
+seaborn
+scikit-learn
+scipy
+torch
+tqdm
+transformers
+pandas
+tqdm_joblib
