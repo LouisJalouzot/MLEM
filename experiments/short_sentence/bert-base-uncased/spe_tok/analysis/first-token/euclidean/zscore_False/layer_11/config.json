@@ -1,0 +1,1 @@
+{"dataset": "short_sentence", "_model": "bert-base-uncased", "seed": 0, "step": null, "add_special_tokens": true, "zscore": false, "take_activation_from": "first-token", "distance_metric": "euclidean", "layer": 11, "min_max": true, "conditional": false}

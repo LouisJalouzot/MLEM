@@ -1,0 +1,10 @@
+Feature,AUC,std,n_splits,sem,pval,dataset,_model,seed,step,add_special_tokens,zscore,take_activation_from,distance_metric,layer,min_max,conditional,Method
+sentence_GROUP,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+sentence_TENSE,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_ANIM,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_GEN,0.9982306905259491,0.002298697696672169,3,0.0013271537339592495,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_NUM,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_PERS,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_TYPE,1.0,0.0,3,0.0,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+subj_ZIPF,0.9955798444344874,0.0013737108468952356,3,0.0007931123272436731,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
+verb_ZIPF,0.9981833795745806,0.0031464788748938677,3,0.0018166204254194455,0.0,short_sentence,bert-base-uncased,0,,True,False,first-token,euclidean,11,True,False,Decoding
