@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlem"
+version = "0.1.0"
+authors = [
+  { name="Louis Jalouzot", email="jalouzot.louis@gmail.com" },
+]
+description = "Implementation of MLEM."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "torch",
+    "scikit-learn",
+    "pandas",
+    "tqdm",
+    "torchsort",
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.7",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your/repo"
