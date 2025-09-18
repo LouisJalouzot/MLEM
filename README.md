@@ -1,115 +1,117 @@
-# MLEM: A Simplified Implementation
+# Installation
 
-This package provides a simplified, `sklearn`-like implementation of the MLEM (Manifold-based Learning for Explainable Models) method for estimating feature importance.
-
-## Installation
-
-You can install the package directly from the source:
+You can install MLEM via pip directly from GitHub:
 
 ```bash
-pip install .
+(uv) pip install git+https://github.com/LouisJalouzot/MLEM
 ```
 
-## Usage
-
-The main entry point is the `MLEM` class, which follows the `sklearn` `fit`/`transform` API.
-
-### Basic Usage
+# Usage
 
 ```python
-import pandas as pd
-import numpy as np
 from mlem import MLEM
 
-# 1. Create dummy data
-n_samples = 100
-n_features = 10
-n_repr_dims = 128
+X = ...  # Your stimuli features as a pandas DataFrame (it can contain categorical features), numpy array, or PyTorch tensor, it has to be of shape (n_samples, n_features)
+Y = ...  # Your neural representations of the stimuli as a NumPy array or PyTorch tensor, it has to be of shape (n_samples, hidden_size)
+mlem = MLEM()
+mlem.fit(X, Y) # Train the model
+feature_importances, scores = mlem.score() # Compute feature importances on the same data
+```
+It is recommended to use a `pandas.DataFrame` for `X` to correctly handle categorical features.
+Numerical columns will be min-max scaled, and categorical columns will be encoded as integer codes.
+If `X` is a NumPy array or a PyTorch tensor, it is assumed to contain only numerical features.
+`Y` will be flattened to a 2D tensor of shape `(n_samples, -1)`.
 
-# Feature dataframe
-features = pd.DataFrame({
-    f'feature_{i}': np.random.rand(n_samples) for i in range(n_features)
-})
+The output `feature_importances` is a pandas DataFrame containing the feature importances for each feature (columns) across all the `n_permutations` permutations (rows).
+The output `scores` is a pandas Series of all the Spearman scores computed during the computation of the feature importances (number of features x `n_permutations`).
 
-# High-dimensional representations of stimuli
-representations = np.random.rand(n_samples, n_repr_dims)
+## Test-train split
 
-# 2. Initialize and fit the model
-# With feature interactions (default)
-mlem_model = MLEM(max_epochs=100, interactions=True)
-mlem_model.fit(features, representations)
+With a simple train-test split:
+```python
+from sklearn.model_selection import train_test_split
 
-# 3. Get the learned SPD matrix
-spd_matrix = mlem_model.get_spd_matrix()
-
-print("Learned SPD Matrix (with interactions):")
-print(spd_matrix)
-
-# Without feature interactions (diagonal matrix)
-mlem_model_no_interactions = MLEM(max_epochs=100, interactions=False)
-mlem_model_no_interactions.fit(features, representations)
-spd_matrix_no_interactions = mlem_model_no_interactions.get_spd_matrix()
-
-print("\nLearned SPD Matrix (no interactions):")
-print(spd_matrix_no_interactions)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y)
+mlem.fit(X_train, Y_train) # Train the model
+feature_importances, scores = mlem.score(X_test, Y_test) # Compute feature importances on the test set
 ```
 
-### Feature Importance
-
-You can also compute permutation feature importance after fitting the model.
-
+With cross-validation:
 ```python
-# 4. Compute feature importance
-feature_importance = mlem_model.compute_feature_importance(n_permutations=10)
-
-print("\nFeature Importance:")
-print(feature_importance)
-```
-
-The learned SPD matrix represents the importance and correlations of the features. Higher values on the diagonal indicate higher importance for individual features, and off-diagonal values represent the learned correlations between feature pairs. When `interactions=False`, the model learns a diagonal SPD matrix, which is equivalent to a linear regression with positive weights.
-
-### Multi-Target Regression Example
-
-Here's how to use MLEM with a multi-target regression problem, using `sklearn.datasets.make_regression`.
-
-```python
+from sklearn.model_selection import KFold
 import pandas as pd
-import numpy as np
-from sklearn.datasets import make_regression
-from mlem import MLEM
 
-# 1. Create dummy data for multi-target regression
-n_samples = 100
-n_features = 10
-n_targets = 5  # Number of targets for multi-output regression
+all_importances = []
+all_scores = []
 
-# Generate synthetic data
-features_np, representations = make_regression(
-    n_samples=n_samples,
-    n_features=n_features,
-    n_targets=n_targets,
-    random_state=42
-)
+kf = KFold(shuffle=True)
+for i, (train_index, test_index) in enumerate(kf.split(X)):
+    mlem.fit(X[train_index], Y[train_index])
+    fi, s = mlem.score(X[test_index], Y[test_index])
+    fi["split"] = i
+    s["split"] = i
+    all_importances.append(fi)
+    all_scores.append(s)
 
-# Feature dataframe
-features = pd.DataFrame(
-    features_np,
-    columns=[f'feature_{i}' for i in range(n_features)]
-)
-
-# 2. Initialize and fit the model
-mlem_model = MLEM(max_epochs=100, interactions=True)
-mlem_model.fit(features, representations)
-
-# 3. Get the learned SPD matrix
-spd_matrix = mlem_model.get_spd_matrix()
-
-print("Learned SPD Matrix (multi-target regression):")
-print(spd_matrix)
-
-# 4. Compute feature importance
-feature_importance = mlem_model.compute_feature_importance(n_permutations=10)
-
-print("\nFeature Importance (multi-target regression):")
-print(feature_importance)
+all_importances = pd.concat(all_importances)
+all_scores = pd.concat(all_scores)
 ```
+
+## Precomputed distances
+
+You can use MLEM on matrices of precomputed feature and neural distances.
+In this case `X` and `Y` are not preprocessed.
+
+```python
+X = ...  # Your precomputed feature distance matrices of shape (n_samples, n_samples, n_features)
+Y = ...  # Your precomputed matrix of pairwise neural distances of shape (n_samples, n_samples)
+mlem = MLEM(distance='precomputed')
+mlem.fit(X, Y)
+fi, s = mlem.score()
+```
+
+## Interactions
+
+You can enable modelling of feature interactions by setting `interactions=True` when initializing MLEM.
+This will improve fit performance in particular if some interactions between features are represented in the embeddings `Y`.
+As a result, the output feature importances from `mlem.score` will also include interaction terms.
+Note that this will increase memory usage and computation time.
+Also, correlations between features and their interactions are often very high.
+Since permutation feature importance is sensitive to correlated features, the resulting feature importance values should be interpreted with caution.
+
+## Batch size estimation
+
+The first step of the pipeline is to estimate a `batch_size` to use during training.
+This is done automatically in `.fit()` if `batch_size` is not provided.
+Since this estimation only depends on the feature data `X`, you can estimate it once and reuse it for different `Y`s.
+
+```python
+batch_size = mlem.estimate_batch_size(X)
+mlem_1 = MLEM(batch_size=batch_size)
+mlem_1.fit(X, Y_1)
+mlem_2 = MLEM(batch_size=batch_size)
+mlem_2.fit(X, Y_2)
+```
+
+# Troubleshooting
+
+## High variability across runs
+
+If you observe high variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training.
+To mitigate this, you can try decreasing `threshold` (e.g. to 0.005 instead of the default 0.01) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM).
+Note that a larger `batch_size` will increase memory usage and increase computation time.
+Alternatively you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50).
+
+## Out of memory errors
+
+### During feature importance computation
+
+If you encounter out of memory errors when computing feature importances you can try setting the parameter `memory` to `'low'` when initializing MLEM.
+This will reduce memory usage at the cost of increased computation time.
+On the other hand, if you have a lot of memory available, you can set `memory` to `'high'` to speed up computation.
+
+### During batch size estimation or during training
+
+If you encounter out of memory errors during batch size estimation or during training, you can try increasing the `threshold` parameter (e.g. to 0.02 instead of the default 0.01) so that the estimated `batch_size` is smaller.
+Or directly set the `batch_size` parameter to a smaller value.
+Note that this will decrease the precision of the method and induce more variability across runs.
