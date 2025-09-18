@@ -113,3 +113,15 @@ feature_importance = mlem_model.compute_feature_importance(n_permutations=10)
 print("\nFeature Importance (multi-target regression):")
 print(feature_importance)
 ```
+
+# Known issues
+
+- Building `torchsort` from source is the default behavior and can be challenging (e.g. on systems without `gcc`).
+- Even with a successful build, `torchsort` may still give an error on GPU.
+In both cases, consider installing `torchsort` separately using [pre-built binaries](https://github.com/teddykoker/torchsort/releases) before installing this package:
+```bash
+# For instance for Python 3.11, PyTorch 2.6 and CUDA 12.6
+pip install https://github.com/teddykoker/torchsort/releases/download/v0.1.10/torchsort-0.1.10+pt26cu126-cp311-cp311-linux_x86_64.whl
+# or for CPU only
+pip install https://github.com/teddykoker/torchsort/releases/download/v0.1.10/torchsort-0.1.10+pt26cpu-cp311-cp311-linux_x86_64.whl
+```

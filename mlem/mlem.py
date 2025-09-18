@@ -13,9 +13,9 @@ class MLEM(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         interactions: bool = True,
+        max_epochs=500,
         lr=0.1,
         weight_decay=0,
-        max_epochs=500,
         eps=1e-3,
         patience=50,
         n_pairs=4096,
