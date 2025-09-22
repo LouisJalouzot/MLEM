@@ -1,7 +1,6 @@
 import pandas as pd
 import torch
 from torch import nn
-from torch.nn import functional as F
 from torchsort import soft_rank
 
 
@@ -70,8 +69,8 @@ class SPDMatrixLearner(nn.Module):
         )
 
         # Center the ranks
-        x_rank_mean = x_rank.mean()
-        y_rank_mean = y_rank.mean()
+        x_rank_mean = x_rank.mean()  # type: ignore
+        y_rank_mean = y_rank.mean()  # type: ignore
         x_centered = x_rank - x_rank_mean
         y_centered = y_rank - y_rank_mean
 
