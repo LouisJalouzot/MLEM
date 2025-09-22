@@ -29,7 +29,7 @@ class TestSPDMatrixLearner:
 
         # Test forward pass
         out = model(torch.randn(5, n_feature_pairs))
-        assert out.shape == (5, 1)
+        assert out.shape == (5,)
         assert hasattr(out, "grad_fn")
 
     def test_positive(self):
@@ -43,7 +43,7 @@ class TestSPDMatrixLearner:
 
         # Test forward pass
         out = model(torch.randn(5, 10))
-        assert out.shape == (5, 1)
+        assert out.shape == (5,)
         assert hasattr(out, "grad_fn")
 
     def test_spearman(self):

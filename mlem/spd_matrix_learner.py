@@ -63,7 +63,7 @@ class SPDMatrixLearner(nn.Module):
             parametrize.register_parametrization(self.W, "weight", Positive())
 
     def forward(self, X):
-        return self.W(X)
+        return self.W(X).squeeze()
 
     def format_W(self, features=None):
         if features is None:

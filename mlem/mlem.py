@@ -1,12 +1,13 @@
 import typing as tp
+from time import time
 
 import numpy as np
 import pandas as pd
 import torch
 from tqdm.auto import tqdm
 
+from .compute_feature_importance import compute_feature_importance
 from .estimate_batch_size import estimate_batch_size
-from .feature_importance import compute_feature_importance
 from .pairwise_dataloader import PairwiseDataloader
 from .spd_matrix_learner import SPDMatrixLearner
 
@@ -65,25 +66,25 @@ class MLEM:
         feature_names: list[str] | None = None,
     ):
         if feature_names is None and isinstance(X, pd.DataFrame):
-            self.feature_names = X.columns.tolist()
+            self.feature_names = X.columns.astype(str).tolist()
         elif feature_names is not None:
-            self.feature_names = feature_names
+            self.feature_names = [str(f) for f in feature_names]
         else:
             self.feature_names = [f"feature_{i}" for i in range(X.shape[1])]
 
         self.X = self._preprocess_features(X)
         self.Y = self._preprocess_representations(Y)
 
-        dl = PairwiseDataloader(
+        dl_estimation = PairwiseDataloader(
             self.X,
-            self.Y,
+            None,
+            feature_names=self.feature_names,
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
         )
-
         n_pairs = estimate_batch_size(
-            dl,
+            dl_estimation,
             self.n_pairs,
             self.n_trials,
             self.threshold,
@@ -96,14 +97,46 @@ class MLEM:
             n_features=self.X.shape[1], interactions=self.interactions
         ).to(self.device)
 
-        best_spearman = -torch.inf
-        pbar = tqdm()
-        with pbar:
-            pass
-
-        compute_feature_importance(
-            self.model_, self.X, self.Y, self.n_permutations, self.device
+        optimizer = torch.optim.AdamW(
+            self.model_.parameters(),
+            lr=self.lr,
+            weight_decay=self.weight_decay,
+            maximize=True,
+            fused=True,
         )
+
+        best_spearman = -torch.inf
+        best_state_dict = None
+        epochs_no_improve = 0
+        pbar = tqdm(total=self.max_epochs, desc="Fitting model", disable=not self.verbose)
+        self.model_.train()
+        with pbar:
+            for _ in range(self.max_epochs):
+                X_batch, Y_batch = dl.sample(n_pairs)
+                optimizer.zero_grad()
+                Y_pred = self.model_(X_batch)
+                score = self.model_.spearman_diff(Y_pred, Y_batch)
+                score.backward()
+                optimizer.step()
+                if score > best_spearman:
+                    best_spearman = score
+                    best_state_dict = self.model_.state_dict()
+                    epochs_no_improve = 0
+                else:
+                    epochs_no_improve += 1
+                pbar.set_postfix(
+                    {
+                        "Score": best_spearman.item(),  # type: ignore
+                        "Batch size": n_pairs,
+                        "Patience": self.patience - epochs_no_improve,
+                    }
+                )
+                if epochs_no_improve >= self.patience:
+                    break
+                n_pairs = int(n_pairs * self.batch_size_increase_factor)
+                pbar.update(1)
+
+        self.model_.load_state_dict(best_state_dict)  # type: ignore
 
         return self
 
@@ -144,7 +177,7 @@ class MLEM:
             s = df.iloc[:, i]
             if number_cols[i]:
                 # min max scale
-                m, M = s.nanmin(), s.nanmax()
+                m, M = np.nanmin(s.values), np.nanmax(s.values)  # type: ignore
                 scale = 1 / (M - m) if M > m else 1
                 X[:, i] = (s.values - m) * scale
             else:
@@ -153,5 +186,4 @@ class MLEM:
                 s[s == -1] = np.nan
                 X[:, i] = s
 
-        return torch.from_numpy(X)
         return torch.from_numpy(X)

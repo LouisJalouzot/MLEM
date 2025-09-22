@@ -89,9 +89,9 @@ def estimate_batch_size(
     with pbar:
         while n_pairs < max_n_pairs:
             # (n_trials, n_pairs, n_features)
-            X_batch, _ = dataloader.sample(n_pairs, n_trials)
+            X_batch = dataloader.sample(n_pairs, n_trials)
             # (n_trials, n_pairs)
-            corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)
+            corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)  # type: ignore
 
             var = corrs.std(dim=0).max()
             if var < threshold:

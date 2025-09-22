@@ -16,13 +16,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-# Check uv pip install -e . --resolution lowest
 dependencies = [
     "torch>=1.9.0",
-    "pandas>=1.0.0",
+    "pandas",
     "tqdm>=4.32.0",
     "torchsort>=0.1.10",
-    "numpy",
+    "numpy>=2.0.0",
 ]
 
 [project.optional-dependencies]

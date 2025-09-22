@@ -8,7 +8,8 @@ class PairwiseDataloader:
     def __init__(
         self,
         X: torch.Tensor,
-        Y: torch.Tensor,
+        Y: torch.Tensor | None,
+        feature_names: tp.List[str] | None = None,
         distance: (
             tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
@@ -40,16 +41,18 @@ class PairwiseDataloader:
         self.nan_to_num = nan_to_num
         self.min_max_scale = min_max_scale
 
-        assert (
-            X.shape[0] == Y.shape[0]
-        ), f"X and Y should have the same first dimension (number of stimuli) but found {X.shape[0]} and {Y.shape[0]}"
+        if Y is not None:
+            assert (
+                X.shape[0] == Y.shape[0]
+            ), f"X and Y should have the same first dimension (number of stimuli) but found {X.shape[0]} and {Y.shape[0]}"
         if self.distance == "precomputed":
             assert (
                 X.ndim == 3 and X.shape[0] == X.shape[1]
             ), f"If precomputed, X should be of shape (n_stimuli, n_stimuli, n_features) but found {X.shape}"
-            assert (
-                Y.ndim == 2 and Y.shape[0] == Y.shape[1]
-            ), f"If precomputed, Y should be of shape (n_stimuli, n_stimuli) but found {Y.shape}"
+            if Y is not None:
+                assert (
+                    Y.ndim == 2 and Y.shape[0] == Y.shape[1]
+                ), f"If precomputed, Y should be of shape (n_stimuli, n_stimuli) but found {Y.shape}"
         else:
             assert (
                 X.ndim == 2
@@ -57,7 +60,20 @@ class PairwiseDataloader:
 
         self.n_stimuli = X.shape[0]
         self.n_features = X.shape[-1]
+        if feature_names is not None:
+            self.feature_names = feature_names
+        else:
+            self.feature_names = [f"feature_{i}" for i in range(X.shape[1])]
         self.triu_indices = torch.triu_indices(self.n_features, self.n_features)
+        if self.interactions:
+            self.feature_names = [
+                (
+                    self.feature_names[i] + " x " + self.feature_names[j]
+                    if i != j
+                    else self.feature_names[i]
+                )
+                for i, j in zip(*self.triu_indices)
+            ]
         self.device = X.device
         self.m = torch.inf
         self.M = -torch.inf
@@ -85,7 +101,54 @@ class PairwiseDataloader:
         else:
             raise ValueError(f"Unknown distance: {distance}")
 
-    def sample(self, n_pairs: int = 4096, n_trials: int = 1):
+    def sample_X(self, ind_1, ind_2):
+        if self.distance == "precomputed":
+            # If distances are precomputed, just index into the matrices
+            # (n_samples, n_features)
+            X_dist = self.X[ind_1, ind_2]
+        else:
+            # Compute the pairwise distances for all the features which are encoded in X
+            # (n_samples, n_features)
+            X_1 = self.X[ind_1]
+            X_2 = self.X[ind_2]
+            # Simple computation of pairwise feature distances thanks to their encoding
+            # (n_samples, n_features)
+            X_dist = (X_1 - X_2).nan_to_num(self.nan_to_num).abs().clip(0, 1)
+
+        if self.interactions:
+            X_dist = X_dist[:, self.triu_indices[0]] * X_dist[:, self.triu_indices[1]]
+        else:
+            X_dist **= 2
+
+        return X_dist
+
+    def sample_Y(self, ind_1, ind_2):
+        if self.distance == "precomputed":
+            # If distances are precomputed, just index into the matrices
+            # (n_samples)
+            Y_dist = self.Y[ind_1, ind_2]  # type: ignore
+        else:
+            # Compute the pairwise distances in neural space
+            # (n_samples, hidden_dim)
+            Y_1 = self.Y[ind_1]  # type: ignore
+            Y_2 = self.Y[ind_2]  # type: ignore
+
+            # Calculate true distance based on the specified metric
+            # (n_samples)
+            Y_dist = self.distance_fn(Y_1, Y_2).nan_to_num(self.nan_to_num)  # type: ignore
+
+        if self.min_max_scale:
+            # Min-max scale Y_dist for numerical stability
+            # Update running min and max
+            self.m = min(self.m, Y_dist.min())
+            self.M = max(self.M, Y_dist.max())
+            Y_dist = (Y_dist - self.m) / (self.M - self.m + 1e-8)
+
+        return Y_dist**2
+
+    def sample(
+        self, n_pairs: int = 4096, n_trials: int = 1
+    ) -> tp.Tuple[torch.Tensor, torch.Tensor] | torch.Tensor:
         """
         Samples pairs of stimuli and computes their feature and neural distances.
 
@@ -115,46 +178,17 @@ class PairwiseDataloader:
         ind_1 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
         ind_2 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
 
-        if self.distance == "precomputed":
-            # If distances are precomputed, just index into the matrices
-            # (n_samples, n_features)
-            X_dist = self.X[ind_1, ind_2]
-            # (n_samples)
-            Y_dist = self.Y[ind_1, ind_2]
-        else:
-            # Compute the pairwise distances for all the features which are encoded in X
-            # (n_samples, n_features)
-            X_1 = self.X[ind_1]
-            X_2 = self.X[ind_2]
-            # Simple computation of pairwise feature distances thanks to their encoding
-            # (n_samples, n_features)
-            X_dist = (X_1 - X_2).nan_to_num(self.nan_to_num).abs().clip(0, 1)
-
-            # Compute the pairwise distances in neural space
-            # (n_samples, hidden_dim)
-            Y_1 = self.Y[ind_1]
-            Y_2 = self.Y[ind_2]
-
-            # Calculate true distance based on the specified metric
-            # (n_samples)
-            Y_dist = self.distance_fn(Y_1, Y_2).nan_to_num(self.nan_to_num)  # type: ignore
-
-        if self.min_max_scale:
-            # Min-max scale Y_dist for numerical stability
-            # Update running min and max
-            self.m = min(self.m, Y_dist.min())
-            self.M = max(self.M, Y_dist.max())
-            Y_dist = (Y_dist - self.m) / (self.M - self.m + 1e-8)
-
-        if self.interactions:
-            X_dist = X_dist[:, self.triu_indices[0]] * X_dist[:, self.triu_indices[1]]
-        else:
-            X_dist **= 2
-        Y_dist **= 2
+        X_dist = self.sample_X(ind_1, ind_2)
+        if self.Y is not None:
+            Y_dist = self.sample_Y(ind_1, ind_2)
 
         # Reshape to (n_trials, n_pairs, ...) shape if n_trials > 1
         if n_trials > 1:
-            X_dist = X_dist.reshape(n_trials, n_pairs, -1)
-            Y_dist = Y_dist.reshape(n_trials, n_pairs)
+            X_dist = X_dist.reshape(n_trials, n_pairs, -1).squeeze()
+            if self.Y is not None:
+                Y_dist = Y_dist.reshape(n_trials, n_pairs).squeeze()
 
-        return X_dist, Y_dist
+        if self.Y is None:
+            return X_dist
+        else:
+            return X_dist, Y_dist
