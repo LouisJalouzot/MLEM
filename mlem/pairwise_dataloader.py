@@ -13,7 +13,9 @@ class PairwiseDataloader:
             tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
         ) = "euclidean",
+        interactions: bool = False,
         nan_to_num: float = 0.0,
+        min_max_scale: bool = True,
     ):
         """
         Initializes the PairwiseDataloader.
@@ -27,12 +29,16 @@ class PairwiseDataloader:
                 Can be 'euclidean', 'manhattan', 'cosine', 'norm_diff', 'precomputed',
                 or a custom callable that takes two tensors of shape (n_pairs, hidden_dim) and
                 returns a tensor of distances of shape (n_pairs,).
+            interactions (bool): Whether to include feature interactions.
             nan_to_num (float): Value to replace NaNs with when computing distances.
+            min_max_scale (bool): Whether to min-max scale the neural distances for numerical stability.
         """
         self.X = X
         self.Y = Y
         self.distance = distance
+        self.interactions = interactions
         self.nan_to_num = nan_to_num
+        self.min_max_scale = min_max_scale
 
         assert (
             X.shape[0] == Y.shape[0]
@@ -51,7 +57,10 @@ class PairwiseDataloader:
 
         self.n_stimuli = X.shape[0]
         self.n_features = X.shape[-1]
+        self.triu_indices = torch.triu_indices(self.n_features, self.n_features)
         self.device = X.device
+        self.m = torch.inf
+        self.M = -torch.inf
 
         if distance == "euclidean":
             # L2 distance
@@ -130,9 +139,22 @@ class PairwiseDataloader:
             # (n_samples)
             Y_dist = self.distance_fn(Y_1, Y_2).nan_to_num(self.nan_to_num)  # type: ignore
 
+        if self.min_max_scale:
+            # Min-max scale Y_dist for numerical stability
+            # Update running min and max
+            self.m = min(self.m, Y_dist.min())
+            self.M = max(self.M, Y_dist.max())
+            Y_dist = (Y_dist - self.m) / (self.M - self.m + 1e-8)
+
+        if self.interactions:
+            X_dist = X_dist[:, self.triu_indices[0]] * X_dist[:, self.triu_indices[1]]
+        else:
+            X_dist **= 2
+        Y_dist **= 2
+
         # Reshape to (n_trials, n_pairs, ...) shape if n_trials > 1
         if n_trials > 1:
-            X_dist = X_dist.reshape(n_trials, n_pairs, self.n_features)
+            X_dist = X_dist.reshape(n_trials, n_pairs, -1)
             Y_dist = Y_dist.reshape(n_trials, n_pairs)
 
         return X_dist, Y_dist
