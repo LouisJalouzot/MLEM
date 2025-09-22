@@ -1,6 +1,8 @@
+import numpy as np
 import pandas as pd
 import torch
 from torch import nn
+from torch.nn.utils import parametrize
 from torchsort import soft_rank
 
 
@@ -9,79 +11,92 @@ def log1pexp(x):
     return torch.log1p(torch.exp(-torch.abs(x))) + torch.relu(x)
 
 
+class CholeskySPD(nn.Module):
+    def __init__(self, n_features):
+        super().__init__()
+        self.n_features = n_features
+        self.triu_indices = torch.triu_indices(n_features, n_features)
+
+    def forward(self, L):
+        L_prime = L.tril()
+        d = torch.diagonal(L_prime)
+        d_positive = log1pexp(d)
+        L_prime.diagonal().copy_(d_positive)
+        W = L_prime @ L_prime.T
+
+        # Keep to Frobenius norm 1
+        W = W / torch.norm(W, p="fro")
+
+        # Get the upper triangle with off-diagonal elements doubled and flatten it
+        # (n_features, n_features) -> (n_features * (n_features + 1) / 2,)
+        W_triu = torch.triu(W) + torch.triu(W, diagonal=1)
+        W_flat = W_triu[*self.triu_indices]
+
+        # (1, n_features * (n_features + 1) / 2)
+        return W_flat[None]
+
+
+class Positive(nn.Module):
+    def forward(self, diag_vec):
+        diag_vec_pos = log1pexp(diag_vec)
+        # Keep to L2 norm 1
+        return diag_vec_pos / diag_vec_pos.norm()
+
+
 class SPDMatrixLearner(nn.Module):
     def __init__(
         self,
         n_features: int,
-        interactions: bool = True,
-        spearman_regularization: str = "l2",
-        spearman_regularization_strength: float = 1.0,
+        interactions: bool = False,
     ):
         super().__init__()
         self.n_features = n_features
         self.interactions = interactions
-        self.spearman_regularization = spearman_regularization
-        self.spearman_regularization_strength = spearman_regularization_strength
-        self.maximize = True
 
         if self.interactions:
-            # Use a simple lower triangular matrix for Cholesky decomposition
-            self.L = nn.Parameter(torch.randn(n_features, n_features).tril_())
+            self.W = nn.Linear(n_features, n_features, bias=False)
+            parametrize.register_parametrization(
+                self.W, "weight", CholeskySPD(n_features), unsafe=True
+            )
         else:
-            # Use a vector for diagonal elements
-            self.diag_vec = nn.Parameter(torch.randn(n_features))
+            self.W = nn.Linear(n_features, 1, bias=False)
+            parametrize.register_parametrization(self.W, "weight", Positive())
 
-    def get_W(self) -> torch.Tensor:
-        if self.interactions:
-            # Ensure diagonal is positive
-            L = self.L.clone()
-            L.diagonal().copy_(log1pexp(L.diagonal()))
-            W = L @ L.T
-        else:
-            # Ensure diagonal is positive
-            W = torch.diag(log1pexp(self.diag_vec))
+    def forward(self, X):
+        return self.W(X)
 
-        return W / W.norm(p="fro")
-
-    def get_formatted_W(self, features=None) -> pd.DataFrame:
-        W = self.get_W().detach().cpu().numpy()
+    def format_W(self, features=None):
         if features is None:
             features = [f"Feature {i+1}" for i in range(self.n_features)]
-        return pd.DataFrame(W, index=features, columns=features)
+        W = self.W.weight.detach().cpu().squeeze().numpy()
+        if self.interactions:
+            W_square = np.full((self.n_features, self.n_features), float("nan"))
+            W_square[*np.triu_indices(self.n_features)] = W
+            return pd.DataFrame(W_square, index=features, columns=features)
+        else:
+            return pd.DataFrame(W, index=features, columns=["Weight"])
 
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
-        W = self.get_W()
-        pX = (X[:, 0] - X[:, 1]).abs().clip(0, 1)
-        pred_dist = (pX @ W * pX).sum(dim=1)
-        return pred_dist
+    def corrcoef(self, x, y):
+        x = x.float()
+        y = y.float()
+        y_n = y - y.mean()
+        x_n = x - x.mean()
+        y_n = y_n / y_n.norm()
+        x_n = x_n / x_n.norm()
 
+        return (y_n * x_n).sum()
+
+    @torch.no_grad()
     def spearman(self, x, y):
-        # Soft rank uses a regularization parameter, 'regularization_strength'
-        x_rank = soft_rank(
-            x.unsqueeze(0),
-            regularization=self.spearman_regularization,
-            regularization_strength=self.spearman_regularization_strength,
-        )
-        y_rank = soft_rank(
-            y.unsqueeze(0),
-            regularization=self.spearman_regularization,
-            regularization_strength=self.spearman_regularization_strength,
-        )
+        dtype = x.dtype
+        x_rank = x.argsort().argsort().to(dtype)
+        y_rank = y.argsort().argsort().to(dtype)
 
-        # Center the ranks
-        x_rank_mean = x_rank.mean()  # type: ignore
-        y_rank_mean = y_rank.mean()  # type: ignore
-        x_centered = x_rank - x_rank_mean
-        y_centered = y_rank - y_rank_mean
+        return self.corrcoef(x_rank, y_rank)
 
-        # Compute covariance and standard deviations
-        cov = (x_centered * y_centered).mean()
-        x_std = x_centered.std()
-        y_std = y_centered.std()
+    def spearman_diff(self, x, y):
+        n = x.shape[0]
+        x_rank = soft_rank(x.reshape(1, -1))
+        y_rank = soft_rank(y.reshape(1, -1))
 
-        # Compute Spearman correlation
-        corr = cov / (x_std * y_std + 1e-8)
-        return corr
-
-    def loss(self, pred_dist, true_dist):
-        return self.spearman(pred_dist, true_dist)
+        return self.corrcoef(x_rank / n, y_rank / n)

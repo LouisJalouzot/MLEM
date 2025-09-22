@@ -84,7 +84,7 @@ class MLEM:
     def get_weights(self):
         if self.model_ is None:
             raise RuntimeError("You must call fit before getting the weights.")
-        return self.model_.get_formatted_W(self.feature_names)
+        return self.model_.format_W(self.feature_names)
 
     def _preprocess_representations(self, Y):
         if isinstance(Y, pd.DataFrame) or isinstance(Y, pd.Series):
