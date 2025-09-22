@@ -16,15 +16,21 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+# Check uv pip install -e . --resolution lowest
 dependencies = [
-    "numpy",
-    "torch",
-    "scikit-learn",
-    "pandas",
-    "tqdm",
-    "torchsort",
-    "ipykernel>=6.29.5",
-    "ipywidgets>=8.1.7",
+    "numpy>=1.0.0",
+    "torch>=1.9.0",
+    "scikit-learn>=1.0.0",
+    "pandas>=1.0.0",
+    "tqdm>=4.32.0",
+    "torchsort>=0.1.10",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "ipykernel",
+    "ipywidgets",
 ]
 
 [project.urls]

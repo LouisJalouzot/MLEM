@@ -100,4 +100,4 @@ class MLEM(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         # Not applicable for this model, but required by sklearn API
-        return X
+        raise NotImplementedError("Transform is not implemented for MLEM.")
