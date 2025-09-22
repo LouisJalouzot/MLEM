@@ -12,11 +12,11 @@ from .trainer import train
 class MLEM:
     def __init__(
         self,
-        interactions: bool = True,
-        precomputed: bool = False,
+        interactions: bool = False,
+        conditional_pfi: bool = True,
+        n_permutations: int = 5,
         distance: (
-            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff"]
-            | None
+            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
         ) = "euclidean",
         nan_to_num: float = 0.0,
@@ -25,11 +25,9 @@ class MLEM:
         lr: float = 0.1,
         weight_decay: float = 0.0,
         patience: int = 50,
-        n_permutations: int = 5,
         device: str = "cpu",
     ):
         self.interactions = interactions
-        self.precomputed = precomputed
         self.distance = distance
         self.nan_to_num = nan_to_num
         self.n_pairs = n_pairs
@@ -96,7 +94,7 @@ class MLEM:
         return Y.to(self.device)  # type: ignore
 
     def _preprocess_features(self, X):
-        if not self.precomputed and isinstance(X, pd.DataFrame):
+        if not self.distance == "precomputed" and isinstance(X, pd.DataFrame):
             X = self._encode_df(X)
         if isinstance(X, np.ndarray):
             X = torch.from_numpy(X)

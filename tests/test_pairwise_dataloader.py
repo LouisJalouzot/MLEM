@@ -29,7 +29,7 @@ def test_initialization(setup_data):
     dataloader = PairwiseDataloader(X, Y, distance="euclidean")
     assert dataloader.n_stimuli == X.shape[0]
     assert dataloader.n_features == X.shape[1]
-    assert not dataloader.precomputed
+    assert dataloader.distance == "euclidean"
 
 
 def test_shape_mismatch_error(setup_data):
@@ -46,15 +46,9 @@ def test_precomputed_initialization(setup_data):
     X_precomputed = torch.randn(n_stimuli, n_stimuli, n_features)
     Y_precomputed = torch.randn(n_stimuli, n_stimuli)
 
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        dataloader = PairwiseDataloader(
-            X_precomputed, Y_precomputed, precomputed=True, distance="euclidean"
-        )
-        assert len(w) == 1
-        assert "Distance is ignored" in str(w[-1].message)
+    dataloader = PairwiseDataloader(X_precomputed, Y_precomputed, distance="precomputed")
 
-    assert dataloader.precomputed
+    assert dataloader.distance == "precomputed"
     assert dataloader.distance_fn is None
 
 
@@ -131,7 +125,7 @@ def test_precomputed_sampling(setup_data):
     n_features = setup_data["n_features"]
     X_precomputed = torch.randn(n_stimuli, n_stimuli, n_features)
     Y_precomputed = torch.randn(n_stimuli, n_stimuli)
-    dataloader = PairwiseDataloader(X_precomputed, Y_precomputed, precomputed=True)
+    dataloader = PairwiseDataloader(X_precomputed, Y_precomputed, distance="precomputed")
 
     n_pairs = 50
     X_dist, Y_dist = dataloader.sample(n_pairs=n_pairs)

@@ -10,10 +10,8 @@ class PairwiseDataloader:
         self,
         X: torch.Tensor,
         Y: torch.Tensor,
-        precomputed: bool = False,
         distance: (
-            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff"]
-            | None
+            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
         ) = "euclidean",
         nan_to_num: float = 0.0,
@@ -23,34 +21,30 @@ class PairwiseDataloader:
 
         Args:
             X (torch.Tensor): Feature tensor of shape (n_stimuli, n_features) or
-                (n_stimuli, n_stimuli, n_features) if precomputed.
+                (n_stimuli, n_stimuli, n_features) if distance is 'precomputed'.
             Y (torch.Tensor): Neural representation tensor of shape (n_stimuli, hidden_dim) or
-                (n_stimuli, n_stimuli) if precomputed.
-            precomputed (bool): Whether the distances are precomputed.
-            distance (str or callable or None): The distance metric to use for Y.
-                Can be 'euclidean', 'manhattan', 'cosine', 'norm_diff', None if precomputed is True,
+                (n_stimuli, n_stimuli) if distance is 'precomputed'.
+            distance (str or callable): The distance metric to use for Y.
+                Can be 'euclidean', 'manhattan', 'cosine', 'norm_diff', 'precomputed',
                 or a custom callable that takes two tensors of shape (n_pairs, hidden_dim) and
                 returns a tensor of distances of shape (n_pairs,).
             nan_to_num (float): Value to replace NaNs with when computing distances.
         """
         self.X = X
         self.Y = Y
-        self.precomputed = precomputed
+        self.distance = distance
         self.nan_to_num = nan_to_num
 
         assert (
             X.shape[0] == Y.shape[0]
         ), f"X and Y should have the same first dimension (number of stimuli) but found {X.shape[0]} and {Y.shape[0]}"
-        if precomputed:
+        if self.distance == "precomputed":
             assert (
                 X.ndim == 3 and X.shape[0] == X.shape[1]
             ), f"If precomputed, X should be of shape (n_stimuli, n_stimuli, n_features) but found {X.shape}"
             assert (
                 Y.ndim == 2 and Y.shape[0] == Y.shape[1]
             ), f"If precomputed, Y should be of shape (n_stimuli, n_stimuli) but found {Y.shape}"
-            if distance is not None:
-                warnings.warn("Distance is ignored when precomputed is True")
-            self.distance_fn = None
         else:
             assert (
                 X.ndim == 2
@@ -60,26 +54,28 @@ class PairwiseDataloader:
         self.n_features = X.shape[-1]
         self.device = X.device
 
-        if not self.precomputed:
-            if distance == "euclidean":
-                # L2 distance
-                self.distance_fn = lambda y1, y2: torch.linalg.norm(y1 - y2, ord=2, dim=1)
-            elif distance == "manhattan":
-                # L1 distance
-                self.distance_fn = lambda y1, y2: torch.linalg.norm(y1 - y2, ord=1, dim=1)
-            elif distance == "cosine":
-                # Cosine distance
-                self.distance_fn = lambda y1, y2: 1 - F.cosine_similarity(y1, y2, dim=1)
-            elif distance == "norm_diff":
-                # Absolute difference of norms
-                self.distance_fn = lambda y1, y2: torch.abs(
-                    torch.linalg.norm(y1, dim=1) - torch.linalg.norm(y2, dim=1)
-                )
-            elif callable(distance):
-                # Custom distance function
-                self.distance_fn = distance
-            else:
-                raise ValueError(f"Unknown distance: {distance}")
+        if distance == "euclidean":
+            # L2 distance
+            self.distance_fn = lambda y1, y2: torch.linalg.norm(y1 - y2, ord=2, dim=1)
+        elif distance == "manhattan":
+            # L1 distance
+            self.distance_fn = lambda y1, y2: torch.linalg.norm(y1 - y2, ord=1, dim=1)
+        elif distance == "cosine":
+            # Cosine distance
+            self.distance_fn = lambda y1, y2: 1 - F.cosine_similarity(y1, y2, dim=1)
+        elif distance == "norm_diff":
+            # Absolute difference of norms
+            self.distance_fn = lambda y1, y2: torch.abs(
+                torch.linalg.norm(y1, dim=1) - torch.linalg.norm(y2, dim=1)
+            )
+        elif distance == "precomputed":
+            # Precomputed distances
+            self.distance_fn = None
+        elif callable(distance):
+            # Custom distance function
+            self.distance_fn = distance
+        else:
+            raise ValueError(f"Unknown distance: {distance}")
 
     def sample(self, n_pairs: int = 4096, n_trials: int = 1):
         """
@@ -87,7 +83,7 @@ class PairwiseDataloader:
 
         This method efficiently samples `n_pairs` * `n_trials` pairs of stimuli and
         computes the pairwise distances for features (X) and neural representations (Y).
-        If `precomputed` is True, it directly retrieves precomputed distances.
+        If `distance` is 'precomputed', it directly retrieves precomputed distances.
         Otherwise, it calculates distances on the fly.
 
         Args:
@@ -111,7 +107,7 @@ class PairwiseDataloader:
         ind_1 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
         ind_2 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
 
-        if self.precomputed:
+        if self.distance == "precomputed":
             # If distances are precomputed, just index into the matrices
             # (n_samples, n_features)
             X_dist = self.X[ind_1, ind_2]
