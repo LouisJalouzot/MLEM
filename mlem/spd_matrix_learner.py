@@ -1,14 +1,10 @@
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torch.nn.utils import parametrize
 from torchsort import soft_rank
-
-
-def log1pexp(x):
-    # From https://gitlab.com/jbleger/parametrization-cookbook/-/blob/main/parametrization_cookbook/functions/torch.py#:~:text=def%20log1pexp(x,relu(x)
-    return torch.log1p(torch.exp(-torch.abs(x))) + torch.relu(x)
 
 
 class CholeskySPD(nn.Module):
@@ -20,7 +16,7 @@ class CholeskySPD(nn.Module):
     def forward(self, L):
         L_prime = L.tril()
         d = torch.diagonal(L_prime)
-        d_positive = log1pexp(d)
+        d_positive = F.softplus(d)
         L_prime.diagonal().copy_(d_positive)
         W = L_prime @ L_prime.T
 
@@ -38,7 +34,7 @@ class CholeskySPD(nn.Module):
 
 class Positive(nn.Module):
     def forward(self, diag_vec):
-        diag_vec_pos = log1pexp(diag_vec)
+        diag_vec_pos = F.softplus(diag_vec)
         # Keep to L2 norm 1
         return diag_vec_pos / diag_vec_pos.norm()
 
