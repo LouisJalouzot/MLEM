@@ -16,33 +16,19 @@ class CholeskySPD(nn.Module):
     def __init__(self, n_features: int):
         super().__init__()
         self.n_features = n_features
-        # Indices for the lower triangular part of a matrix
-        self.tril_indices = torch.tril_indices(n_features, n_features, offset=0)
+        tril = torch.tril_indices(n_features, n_features, offset=0)
+        self.register_buffer("rows", tril[0])
+        self.register_buffer("cols", tril[1])
+        self.register_buffer("diag_indices", torch.arange(n_features))
 
     def forward(self, w: torch.Tensor) -> torch.Tensor:
-        """
-        Constructs the SPD matrix.
-        Args:
-            w: A flat vector of size n_features * (n_features + 1) / 2,
-               representing the lower triangular elements of a matrix.
-        Returns:
-            A symmetric positive definite matrix W of shape (n_features, n_features).
-        """
-        # Create a zero matrix and fill the lower triangular part
-        L = torch.zeros(self.n_features, self.n_features, device=w.device, dtype=w.dtype)
-        L[self.tril_indices[0], self.tril_indices[1]] = w
-
-        # Ensure diagonal elements are positive for positive definiteness
-        L_diag = torch.diag(L)
-        L.diagonal().copy_(F.softplus(L_diag))
-
-        # Compute the SPD matrix W = L @ L.T
-        W = L @ L.T
-
-        # Normalize to have a Frobenius norm of 1
-        W = W / torch.norm(W, p="fro")
-
-        return W[self.tril_indices[0], self.tril_indices[1]]
+        L = w.new_zeros(self.n_features, self.n_features)
+        L[self.rows, self.cols] = w  # type: ignore
+        diag = L[self.diag_indices, self.diag_indices]  # type: ignore
+        L[self.diag_indices, self.diag_indices] = F.softplus(diag)  # type: ignore
+        W = torch.matmul(L, L.T)
+        W = W / torch.linalg.vector_norm(W)
+        return W[self.rows, self.cols]
 
 
 class Positive(nn.Module):
