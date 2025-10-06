@@ -1,13 +1,12 @@
 import typing as tp
-from time import time
 
 import numpy as np
 import pandas as pd
 import torch
 from tqdm.auto import tqdm
 
-from .compute_feature_importance import compute_feature_importance
-from .estimate_batch_size import estimate_batch_size
+from .batch_size import estimate_batch_size
+from .feature_importance import compute_feature_importance
 from .model import SPDMatrixLearner
 from .pairwise_dataloader import PairwiseDataloader
 
@@ -27,10 +26,8 @@ class MLEM:
         n_trials: int = 16,
         threshold: float = 0.01,
         factor: float = 1.2,
-        estimate_interactions: bool = False,
         starting_n_pairs: int = 256,
         max_n_pairs: int = 2**20,
-        batch_size_increase_factor: int = 1,
         max_epochs: int = 1000,
         lr: float = 0.1,
         weight_decay: float = 0.0,
@@ -47,10 +44,8 @@ class MLEM:
         self.n_trials = n_trials
         self.threshold = threshold
         self.factor = factor
-        self.estimate_interactions = estimate_interactions
         self.starting_n_pairs = starting_n_pairs
         self.max_n_pairs = max_n_pairs
-        self.batch_size_increase_factor = batch_size_increase_factor
         self.max_epochs = max_epochs
         self.lr = lr
         self.weight_decay = weight_decay
@@ -62,6 +57,7 @@ class MLEM:
         self.feature_names = None
         self.X = None
         self.Y = None
+        self.n_pairs_fit = None
 
     def fit(
         self,
@@ -85,10 +81,10 @@ class MLEM:
                 Y=None,
                 feature_names=self.feature_names,
                 distance=self.distance,  # type: ignore
-                interactions=self.estimate_interactions,
+                interactions=False,  # n_pairs is estimated with correlations between features not between pairs of features
                 nan_to_num=self.nan_to_num,
             )
-            n_pairs = estimate_batch_size(
+            self.n_pairs_fit = estimate_batch_size(
                 dl_estimation,
                 self.starting_n_pairs,
                 self.n_trials,
@@ -98,7 +94,7 @@ class MLEM:
                 self.verbose,
             )
         else:
-            n_pairs = self.n_pairs
+            self.n_pairs_fit = self.n_pairs
 
         dl = PairwiseDataloader(
             X=self.X,
@@ -125,11 +121,15 @@ class MLEM:
         best_spearman = -torch.inf
         best_state_dict = None
         epochs_no_improve = 0
-        pbar = tqdm(total=self.max_epochs, desc="Fitting model", disable=not self.verbose)
         self.model_.train()
+        pbar = tqdm(
+            total=self.max_epochs,
+            desc=f"Fitting model with batches of size {self.n_pairs_fit}",
+            disable=not self.verbose,
+        )
         with pbar:
             for _ in range(self.max_epochs):
-                X_batch, Y_batch = dl.sample(n_pairs)
+                X_batch, Y_batch = dl.sample(self.n_pairs_fit)
                 optimizer.zero_grad()
                 Y_pred = self.model_(X_batch)
                 score = self.model_.spearman_diff(Y_pred, Y_batch)
@@ -144,18 +144,57 @@ class MLEM:
                 pbar.set_postfix(
                     {
                         "Score": best_spearman.item(),  # type: ignore
-                        "Batch size": self.n_pairs,
                         "Patience": self.patience - epochs_no_improve,
                     }
                 )
                 if epochs_no_improve >= self.patience:
                     break
-                n_pairs = int(n_pairs * self.batch_size_increase_factor)
                 pbar.update(1)
 
-        self.model_.load_state_dict(best_state_dict)  # type: ignore
+        if best_state_dict is not None:
+            # Restore best model
+            self.model_.load_state_dict(best_state_dict)  # type: ignore
 
         return self
+
+    def score(
+        self,
+        X: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
+        Y: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
+        warning_threshold: float = 0.05,
+        n_pairs: int | None = None,
+    ):
+        if self.model_ is None:
+            raise RuntimeError("You must call fit before calling score.")
+        if X is None or Y is None:
+            assert (
+                X is None and Y is None
+            ), "You must provide both X and Y or none of them."
+            # If X and Y are not provided, use the training data
+            X = self.X
+            Y = self.Y
+        else:
+            X = self._preprocess_features(X)
+            Y = self._preprocess_representations(Y)
+
+        dl = PairwiseDataloader(
+            X=X,  # type: ignore
+            Y=Y,
+            feature_names=self.feature_names,
+            distance=self.distance,  # type: ignore
+            interactions=self.interactions,
+            nan_to_num=self.nan_to_num,
+        )
+
+        return compute_feature_importance(
+            self.model_,
+            dataloader=dl,
+            n_permutations=self.n_permutations,
+            # If not overridden, use the n_pairs used during fitting
+            n_pairs=n_pairs or self.n_pairs or self.n_pairs_fit,  # type: ignore
+            verbose=self.verbose,
+            warning_threshold=warning_threshold,
+        )
 
     def get_weights(self):
         if self.model_ is None:

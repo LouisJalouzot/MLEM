@@ -93,16 +93,16 @@ def estimate_batch_size(
             # (n_trials, n_pairs)
             corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)  # type: ignore
 
-            var = corrs.std(dim=0).max()
+            var = corrs.std(dim=0).max().item()
+            pbar.set_postfix(
+                {"Batch size": n_pairs, "max std": var, "threshold": threshold}
+            )
             if var < threshold:
-                pbar.set_postfix_str(
-                    f"Batch size: {n_pairs} sufficient (max std: {var:.2g} < threshold: {threshold})"
-                )
+                if verbose:
+                    print(
+                        f"Batch size: {n_pairs} sufficient (max std: {var:.2g} < threshold: {threshold})"
+                    )
                 break
-            else:
-                pbar.set_postfix_str(
-                    f"Batch size {n_pairs} not sufficient (max std: {var:.2g} > threshold: {threshold})",
-                )
             n_pairs = int(n_pairs * factor)
             pbar.update(1)
 

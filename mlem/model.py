@@ -22,17 +22,23 @@ class CholeskySPD(nn.Module):
         self.register_buffer("diag_indices", torch.arange(n_features))
 
     def forward(self, w: torch.Tensor) -> torch.Tensor:
+        # Build lower triangular matrix L from vector w
         L = w.new_zeros(self.n_features, self.n_features)
         L[self.rows, self.cols] = w  # type: ignore
+        # Ensure diagonal elements are positive
         diag = L[self.diag_indices, self.diag_indices]  # type: ignore
         L[self.diag_indices, self.diag_indices] = F.softplus(diag)  # type: ignore
+        # Build the SPD matrix W = L @ L^T
         W = torch.matmul(L, L.T)
+        # Normalize W to have unit Frobenius norm
         W = W / torch.linalg.vector_norm(W)
+        # Return flattened lower triangular part of W
         return W[self.rows, self.cols]
 
 
 class Positive(nn.Module):
     def forward(self, w):
+        # Ensure weights are positive
         w_pos = F.softplus(w)
         # Keep to L2 norm 1
         return w_pos / w_pos.norm()
