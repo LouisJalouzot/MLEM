@@ -15,7 +15,7 @@ class MLEM:
     def __init__(
         self,
         interactions: bool = False,
-        # conditional_pfi: bool = True,
+        # conditional_pfi: bool = True, # TODO: implement conditional PFI
         n_permutations: int = 5,
         distance: (
             tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]

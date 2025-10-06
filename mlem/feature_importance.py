@@ -41,10 +41,10 @@ def compute_feature_importance(
 
     all_importances = pd.DataFrame(all_importances)
     scores = pd.Series(scores, name="spearman")
-
-    if scores.std() > warning_threshold:
+    var = scores.std()
+    if var > warning_threshold:
         warnings.warn(
-            f"Warning: High score variability between batches (std={scores.std():.4f} > warning threshold={warning_threshold}). "
+            f"Warning: High score variability between batches (std={var} > warning threshold={warning_threshold}). "
             "Consider decreasing `threshold`, increasing `starting_n_pairs`, `batch_size_increase_factor` or directly `n_pairs`.",
             UserWarning,
         )
