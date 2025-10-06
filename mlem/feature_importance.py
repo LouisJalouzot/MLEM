@@ -7,10 +7,22 @@ from torch.nn.utils import parametrize
 from tqdm.auto import tqdm
 
 from .batch_size import batch_corrcoef
+from .model import Model
+from .pairwise_dataloader import PairwiseDataloader
 
 
 @torch.no_grad()
-def batch_spearman(x, y, dim=-1):
+def batch_spearman(x: torch.Tensor, y: torch.Tensor, dim: int = -1) -> torch.Tensor:
+    """Computes batched Spearman rank correlation coefficient.
+
+    Args:
+        x (torch.Tensor): The first input tensor.
+        y (torch.Tensor): The second input tensor.
+        dim (int, default=-1): The dimension along which to compute the correlation.
+
+    Returns:
+        torch.Tensor: The batched Spearman correlation coefficients.
+    """
     dtype = x.dtype
     x_rank = x.argsort(dim=dim).argsort(dim=dim).to(dtype)
     y_rank = y.argsort(dim=dim).argsort(dim=dim).to(dtype)
@@ -21,14 +33,31 @@ def batch_spearman(x, y, dim=-1):
 @torch.no_grad()
 @parametrize.cached()
 def compute_feature_importance(
-    model,
-    dataloader,
-    n_permutations=5,
-    n_pairs=4096,
-    verbose=True,
-    warning_threshold=0.05,
-    memory="medium",
-):
+    model: Model,
+    dataloader: PairwiseDataloader,
+    n_permutations: int = 5,
+    n_pairs: int = 4096,
+    verbose: bool = True,
+    warning_threshold: float = 0.05,
+    memory: str = "medium",
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Computes permutation feature importances.
+
+    Args:
+        model (Model): The trained model.
+        dataloader (PairwiseDataloader): The dataloader for sampling data.
+        n_permutations (int, default=5): The number of permutations for each feature.
+        n_pairs (int, default=4096): The number of pairs to sample in each batch.
+        verbose (bool, default=True): If True, displays a progress bar.
+        warning_threshold (float, default=0.05): The threshold for score variability
+            to trigger a warning.
+        memory (str, default='medium'): The memory usage profile
+            ('low', 'medium', 'high').
+
+    Returns:
+        tuple[pd.DataFrame, pd.Series]: A tuple containing a DataFrame of feature
+            importances and a Series of baseline scores across permutations.
+    """
     model.eval()
     feature_names = dataloader.feature_names
     n_features = len(feature_names)

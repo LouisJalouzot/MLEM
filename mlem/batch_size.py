@@ -7,19 +7,19 @@ from tqdm.auto import tqdm
 from .pairwise_dataloader import PairwiseDataloader
 
 
-def batch_corrcoef(x: torch.Tensor, y: torch.Tensor, dim: int = 0, eps: float = 1e-8):
+def batch_corrcoef(
+    x: torch.Tensor, y: torch.Tensor, dim: int = -1, eps: float = 1e-8
+) -> torch.Tensor:
     """Compute the Pearson correlation coefficient between two batches of vectors.
 
-    Parameters
-    ----------
-    x : torch.Tensor
-        The first input tensor of shape (batch_size, num_features).
-    y : torch.Tensor
-        The second input tensor of shape (batch_size, num_features).
-    dim : int, optional
-        The dimension along which to compute the correlation, by default 1.
-    eps : float, optional
-        A small value to avoid division by zero, by default 1e-8
+    Args:
+        x (torch.Tensor): The first input tensor.
+        y (torch.Tensor): The second input tensor.
+        dim (int, default=-1): The dimension along which to compute the correlation.
+        eps (float, default=1e-8): A small value to avoid division by zero.
+
+    Returns:
+        torch.Tensor: The batched Pearson correlation coefficients.
     """
     x_mean = x.mean(dim=dim, keepdim=True)
     y_mean = y.mean(dim=dim, keepdim=True)
@@ -39,7 +39,7 @@ def batch_corrcoef(x: torch.Tensor, y: torch.Tensor, dim: int = 0, eps: float = 
 
 def estimate_batch_size(
     dataloader: PairwiseDataloader,
-    n_pairs: int = 4096,
+    starting_n_pairs: int = 4096,
     n_trials: int = 64,
     threshold: float = 0.01,
     factor: float = 1.2,
@@ -47,31 +47,25 @@ def estimate_batch_size(
     verbose: bool = True,
 ) -> int:
     """Estimate a minimal batch size for training.
+
     It samples `n_trials` batches of feature distances on `n_pairs` pairs of stimuli,
     and computes the correlation between all pairs of features along the stimuli dimension.
     If the standard deviation of these correlations across trials is below `threshold`,
-    the current `n_pairs` is returned. Otherwise, it increases the number of pairs by
+    the current `n_pairs` is returned. Otherwise, it multiplies the number of pairs by
     `factor` and repeats the process.
 
-    Parameters
-    ----------
-    dataloader: PairwiseDataloader
-        The dataloader to use for feature distances.
-    n_pairs: int, optional
-        The initial number of pairs to sample, by default 4096
-    n_trials: int, optional
-        The number of trials to estimate the standard deviation of correlations, by default 64
-    threshold: float, optional
-        The threshold for stopping the search, by default 0.01
-    factor: float, optional
-        The factor by which to increase the number of pairs, by default 1.2
-    max_n_pairs: int, optional
-        The maximum number of pairs to sample, by default 2**20
+    Args:
+        dataloader (PairwiseDataloader): The dataloader to use for feature distances.
+        starting_n_pairs (int, default=4096): The initial number of pairs to sample.
+        n_trials (int, default=64): The number of trials to estimate the standard
+            deviation of correlations.
+        threshold (float, default=0.01): The threshold for stopping the search.
+        factor (float, default=1.2): The factor by which to increase the number of pairs.
+        max_n_pairs (int, default=2**20): The maximum number of pairs to sample.
+        verbose (bool, default=True): If True, displays a progress bar.
 
-    Returns
-    -------
-    n_pairs: int
-        Estimated batch size.
+    Returns:
+        int: Estimated batch size.
     """
     assert factor > 1, "factor should be greater than 1"
 
@@ -81,6 +75,7 @@ def estimate_batch_size(
         n = dataloader.n_features
     i, j = torch.triu_indices(n, n, 1)
 
+    n_pairs = starting_n_pairs
     pbar = tqdm(
         total=int(np.log(max_n_pairs / n_pairs) / np.log(factor)),
         desc="Estimating batch size",
