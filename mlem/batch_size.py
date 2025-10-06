@@ -102,6 +102,8 @@ def estimate_batch_size(
                     print(
                         f"Batch size: {n_pairs} sufficient (max std: {var:.2g} < threshold: {threshold})"
                     )
+                pbar.total = pbar.n
+                pbar.refresh()
                 break
             n_pairs = int(n_pairs * factor)
             pbar.update(1)

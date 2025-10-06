@@ -24,7 +24,7 @@ class MLEM:
         nan_to_num: float = 0.0,
         n_pairs: int | None = None,
         n_trials: int = 16,
-        threshold: float = 0.01,
+        threshold: float = 0.02,
         factor: float = 1.2,
         starting_n_pairs: int = 256,
         max_n_pairs: int = 2**20,
@@ -34,7 +34,7 @@ class MLEM:
         patience: int = 50,
         device: str = "cpu",
         verbose: bool = True,
-        low_memory: bool = False,
+        memory: tp.Literal["low", "medium", "high"] = "high",
     ):
         self.interactions = interactions
         # self.conditional_pfi = conditional_pfi
@@ -53,13 +53,13 @@ class MLEM:
         self.patience = patience
         self.device = device
         self.verbose = verbose
-        self.low_memory = low_memory
+        self.memory = memory
 
         self.model_ = None
         self.feature_names = None
         self.X = None
         self.Y = None
-        self.n_pairs_fit = None
+        self.n_pairs_fit_ = None
 
     def fit(
         self,
@@ -86,7 +86,7 @@ class MLEM:
                 interactions=False,  # n_pairs is estimated with correlations between features not between pairs of features
                 nan_to_num=self.nan_to_num,
             )
-            self.n_pairs_fit = estimate_batch_size(
+            self.n_pairs_fit_ = estimate_batch_size(
                 dl_estimation,
                 self.starting_n_pairs,
                 self.n_trials,
@@ -96,7 +96,7 @@ class MLEM:
                 self.verbose,
             )
         else:
-            self.n_pairs_fit = self.n_pairs
+            self.n_pairs_fit_ = self.n_pairs
 
         dl = PairwiseDataloader(
             X=self.X,
@@ -126,12 +126,12 @@ class MLEM:
         self.model_.train()
         pbar = tqdm(
             total=self.max_epochs,
-            desc=f"Fitting model with batches of size {self.n_pairs_fit}",
+            desc=f"Fitting model with batches of size {self.n_pairs_fit_}",
             disable=not self.verbose,
         )
         with pbar:
             for _ in range(self.max_epochs):
-                X_batch, Y_batch = dl.sample(self.n_pairs_fit)
+                X_batch, Y_batch = dl.sample(self.n_pairs_fit_)
                 optimizer.zero_grad()
                 Y_pred = self.model_(X_batch)
                 score = self.model_.spearman_diff(Y_pred, Y_batch)
@@ -150,6 +150,8 @@ class MLEM:
                     }
                 )
                 if epochs_no_improve >= self.patience:
+                    pbar.total = pbar.n
+                    pbar.refresh()
                     break
                 pbar.update(1)
 
@@ -166,7 +168,7 @@ class MLEM:
         warning_threshold: float = 0.05,
         n_pairs: int | None = None,
     ):
-        if self.model_ is None:
+        if self.model_ is None or self.n_pairs_fit_ is None:
             raise RuntimeError("You must call fit before calling score.")
         if X is None or Y is None:
             assert (
@@ -193,10 +195,10 @@ class MLEM:
             dataloader=dl,
             n_permutations=self.n_permutations,
             # If not overridden, use the n_pairs used during fitting
-            n_pairs=n_pairs or self.n_pairs or self.n_pairs_fit,  # type: ignore
+            n_pairs=n_pairs or self.n_pairs or self.n_pairs_fit_,  # type: ignore
             verbose=self.verbose,
             warning_threshold=warning_threshold,
-            low_memory=self.low_memory,
+            memory=self.memory,
         )
 
     def get_weights(self):

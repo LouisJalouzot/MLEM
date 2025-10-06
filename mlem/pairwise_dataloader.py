@@ -17,6 +17,7 @@ class PairwiseDataloader:
         interactions: bool = False,
         nan_to_num: float = 0.0,
         min_max_scale: bool = True,
+        # memory: str = "low",  # TODO: Implement a low memory version if necessary
     ):
         """
         Initializes the PairwiseDataloader.

@@ -27,15 +27,15 @@ def compute_feature_importance(
     n_pairs=4096,
     verbose=True,
     warning_threshold=0.05,
-    low_memory=False,
+    memory="medium",
 ):
     model.eval()
-    all_importances = defaultdict(list)
-    baseline_scores = []
     feature_names = dataloader.feature_names
     n_features = len(feature_names)
 
-    if low_memory:
+    if memory == "low":
+        all_importances = defaultdict(list)
+        baseline_scores = []
         pbar = tqdm(
             total=n_features * n_permutations,
             desc=f"Computing feature importance on batches of size {n_pairs}",
@@ -56,7 +56,43 @@ def compute_feature_importance(
                     pbar.update(1)
         all_importances = pd.DataFrame(all_importances)
         baseline_scores = pd.Series(baseline_scores, name="spearman")
-    else:
+
+    elif memory == "medium":
+        all_importances = defaultdict(list)
+        baseline_scores = []
+        pbar = tqdm(
+            total=n_features,
+            desc=f"Computing feature importance on batches of size {n_pairs}",
+            disable=not verbose,
+        )
+        with pbar:
+            for i, f in enumerate(feature_names):
+                X_batch, Y_batch = dataloader.sample(n_pairs, n_trials=n_permutations)
+                # (n_permutations, n_pairs, n_features)
+                # (n_permutations, n_pairs)
+
+                # Compute baseline scores
+                # (n_permutations,)
+                baseline_score = batch_spearman(model(X_batch), Y_batch, dim=1)
+                baseline_scores.extend(baseline_score.cpu().numpy())
+
+                # Permute feature i
+                # (n_permutations, n_pairs)
+                batched_perms = torch.rand(
+                    n_permutations, n_pairs, device=X_batch.device
+                ).argsort(dim=1)
+                X_batch[:, :, i] = X_batch[:, :, i].gather(dim=1, index=batched_perms)
+
+                # Compute permuted scores
+                # (n_permutations,)
+                permuted_score = batch_spearman(model(X_batch), Y_batch, dim=1)
+
+                all_importances[f].extend((baseline_score - permuted_score).cpu().numpy())
+                pbar.update(1)
+        all_importances = pd.DataFrame(all_importances)
+        baseline_scores = pd.Series(baseline_scores, name="spearman")
+
+    else:  # memory == "high"
         n_total_trials = n_features * n_permutations
         X_batch, Y_batch = dataloader.sample(n_pairs, n_trials=n_total_trials)
         # (n_features, n_permutations, n_pairs, n_features)
