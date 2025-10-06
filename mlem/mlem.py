@@ -8,8 +8,8 @@ from tqdm.auto import tqdm
 
 from .compute_feature_importance import compute_feature_importance
 from .estimate_batch_size import estimate_batch_size
+from .model import SPDMatrixLearner
 from .pairwise_dataloader import PairwiseDataloader
-from .spd_matrix_learner import SPDMatrixLearner
 
 
 class MLEM:
@@ -23,13 +23,15 @@ class MLEM:
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
         ) = "euclidean",
         nan_to_num: float = 0.0,
-        n_pairs: int = 4096,
-        n_trials: int = 64,
+        n_pairs: int | None = None,
+        n_trials: int = 16,
         threshold: float = 0.01,
         factor: float = 1.2,
+        estimate_interactions: bool = False,
+        starting_n_pairs: int = 256,
         max_n_pairs: int = 2**20,
         batch_size_increase_factor: int = 1,
-        max_epochs: int = 500,
+        max_epochs: int = 1000,
         lr: float = 0.1,
         weight_decay: float = 0.0,
         patience: int = 50,
@@ -45,6 +47,8 @@ class MLEM:
         self.n_trials = n_trials
         self.threshold = threshold
         self.factor = factor
+        self.estimate_interactions = estimate_interactions
+        self.starting_n_pairs = starting_n_pairs
         self.max_n_pairs = max_n_pairs
         self.batch_size_increase_factor = batch_size_increase_factor
         self.max_epochs = max_epochs
@@ -75,22 +79,34 @@ class MLEM:
         self.X = self._preprocess_features(X)
         self.Y = self._preprocess_representations(Y)
 
-        dl_estimation = PairwiseDataloader(
-            self.X,
-            None,
+        if self.n_pairs is None:
+            dl_estimation = PairwiseDataloader(
+                X=self.X,
+                Y=None,
+                feature_names=self.feature_names,
+                distance=self.distance,  # type: ignore
+                interactions=self.estimate_interactions,
+                nan_to_num=self.nan_to_num,
+            )
+            n_pairs = estimate_batch_size(
+                dl_estimation,
+                self.starting_n_pairs,
+                self.n_trials,
+                self.threshold,
+                self.factor,
+                self.max_n_pairs,
+                self.verbose,
+            )
+        else:
+            n_pairs = self.n_pairs
+
+        dl = PairwiseDataloader(
+            X=self.X,
+            Y=self.Y,
             feature_names=self.feature_names,
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
-        )
-        n_pairs = estimate_batch_size(
-            dl_estimation,
-            self.n_pairs,
-            self.n_trials,
-            self.threshold,
-            self.factor,
-            self.max_n_pairs,
-            self.verbose,
         )
 
         self.model_ = SPDMatrixLearner(
@@ -102,6 +118,7 @@ class MLEM:
             lr=self.lr,
             weight_decay=self.weight_decay,
             maximize=True,
+            amsgrad=True,
             fused=True,
         )
 
@@ -127,7 +144,7 @@ class MLEM:
                 pbar.set_postfix(
                     {
                         "Score": best_spearman.item(),  # type: ignore
-                        "Batch size": n_pairs,
+                        "Batch size": self.n_pairs,
                         "Patience": self.patience - epochs_no_improve,
                     }
                 )
