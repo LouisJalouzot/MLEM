@@ -34,6 +34,7 @@ class MLEM:
         patience: int = 50,
         device: str = "cpu",
         verbose: bool = True,
+        low_memory: bool = False,
     ):
         self.interactions = interactions
         # self.conditional_pfi = conditional_pfi
@@ -52,6 +53,7 @@ class MLEM:
         self.patience = patience
         self.device = device
         self.verbose = verbose
+        self.low_memory = low_memory
 
         self.model_ = None
         self.feature_names = None
@@ -194,6 +196,7 @@ class MLEM:
             n_pairs=n_pairs or self.n_pairs or self.n_pairs_fit,  # type: ignore
             verbose=self.verbose,
             warning_threshold=warning_threshold,
+            low_memory=self.low_memory,
         )
 
     def get_weights(self):
