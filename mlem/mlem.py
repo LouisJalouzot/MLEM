@@ -34,6 +34,7 @@ class MLEM:
         device: str = "cpu",
         verbose: bool = False,
         memory: tp.Literal["low", "medium", "high"] = "medium",
+        random_seed: tp.Optional[int] = None,
     ):
         """Initializes the MLEM model.
 
@@ -82,6 +83,8 @@ class MLEM:
                 is the fastest but uses the most memory by vectorizing over permutations
                 and features. 'medium' is intermediate as it vectorizes over permutations
                 but iterates over features.
+            random_seed (int | None, default=None): A seed for the random number
+                generator to ensure reproducibility of results.
         """
         self.interactions = interactions
         # self.conditional_pfi = conditional_pfi
@@ -101,12 +104,16 @@ class MLEM:
         self.device = device
         self.verbose = verbose
         self.memory = memory
+        self.random_seed = random_seed
 
         self.model_ = None
         self.feature_names = None
         self.X_ = None
         self.Y_ = None
         self.batch_size_fit_ = None
+        self.rng_ = None
+        if self.random_seed is not None:
+            self.rng_ = torch.Generator(device=self.device).manual_seed(self.random_seed)
 
     def fit(
         self,
@@ -147,6 +154,7 @@ class MLEM:
                 distance=self.distance,  # type: ignore
                 interactions=False,  # batch_size is estimated with correlations between features not between pairs of features
                 nan_to_num=self.nan_to_num,
+                rng=self.rng_,
             )
             self.batch_size_fit_ = estimate_batch_size(
                 dl_estimation,
@@ -167,10 +175,14 @@ class MLEM:
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
+            rng=self.rng_,
         )
 
         self.model_ = Model(
-            n_features=self.X_.shape[1], interactions=self.interactions
+            n_features=self.X_.shape[1],
+            interactions=self.interactions,
+            device=self.device,
+            rng=self.rng_,
         ).to(self.device)
 
         optimizer = torch.optim.AdamW(
@@ -270,6 +282,7 @@ class MLEM:
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
+            rng=self.rng_,
         )
 
         return compute_feature_importance(
@@ -281,6 +294,7 @@ class MLEM:
             verbose=self.verbose,
             warning_threshold=warning_threshold,
             memory=self.memory,
+            rng=self.rng_,
         )
 
     def get_weights(self) -> pd.DataFrame:

@@ -76,6 +76,8 @@ class Model(nn.Module):
         self,
         n_features: int,
         interactions: bool = False,
+        device: tp.Optional[torch.device] = None,
+        rng: tp.Optional[torch.Generator] = None,
     ):
         """Initializes the Model module.
 
@@ -83,6 +85,8 @@ class Model(nn.Module):
             n_features (int): The number of input features.
             interactions (bool, default=False): If True, learns an SPD matrix for feature
                 interactions. If False, learns a positive vector of feature weights.
+            rng (torch.Generator | None, default=None): A random number generator for
+                reproducible weight initialization.
         """
         super().__init__()
         self.n_features = n_features
@@ -93,12 +97,14 @@ class Model(nn.Module):
 
         if self.interactions:
             n_params = n_features * (n_features + 1) // 2
-            self.W = nn.Parameter(2 * torch.rand(n_params) - 1)
+            self.W = nn.Parameter(
+                2 * torch.rand(n_params, device=device, generator=rng) - 1
+            )
             parametrize.register_parametrization(
                 self, "W", CholeskySPD(n_features), unsafe=True
             )
         else:
-            self.W = nn.Parameter(torch.rand(n_features))
+            self.W = nn.Parameter(torch.rand(n_features, device=device, generator=rng))
             parametrize.register_parametrization(self, "W", Positive())
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:

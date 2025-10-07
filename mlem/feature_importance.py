@@ -1,3 +1,4 @@
+import typing as tp
 import warnings
 from collections import defaultdict
 
@@ -40,6 +41,7 @@ def compute_feature_importance(
     verbose: bool = True,
     warning_threshold: float = 0.05,
     memory: str = "medium",
+    rng: tp.Optional[torch.Generator] = None,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Computes permutation feature importances: for each feature, it samples a batch of
     data of size `batch_size`, computes the baseline score, permutes the feature, and
@@ -62,6 +64,8 @@ def compute_feature_importance(
             to trigger a warning.
         memory (str, default='medium'): The memory usage profile
             ('low', 'medium', 'high').
+        rng (torch.Generator | None, default=None): A random number generator for
+            reproducible permutations.
 
     Returns:
         tuple[pd.DataFrame, pd.Series]: A tuple containing a DataFrame of feature
@@ -85,7 +89,9 @@ def compute_feature_importance(
                     X_batch, Y_batch = dataloader.sample(batch_size)
                     baseline_score = model.spearman(model(X_batch), Y_batch).item()
                     baseline_scores.append(baseline_score)
-                    perm = torch.randperm(batch_size, device=X_batch.device)
+                    perm = torch.randperm(
+                        batch_size, device=X_batch.device, generator=rng
+                    )
                     X_batch[:, i] = X_batch[perm, i]
                     permuted_score = model.spearman(model(X_batch), Y_batch).item()
                     all_importances[f].append(baseline_score - permuted_score)
@@ -116,7 +122,7 @@ def compute_feature_importance(
                 # from https://discuss.pytorch.org/t/batch-version-of-torch-randperm/111121/3
                 # (n_permutations, batch_size)
                 batched_perms = torch.rand(
-                    n_permutations, batch_size, device=X_batch.device
+                    n_permutations, batch_size, device=X_batch.device, generator=rng
                 ).argsort(dim=1)
 
                 # Permute feature i in place in a batched way
@@ -146,7 +152,7 @@ def compute_feature_importance(
         # from https://discuss.pytorch.org/t/batch-version-of-torch-randperm/111121/3
         # (n_features, n_permutations, batch_size)
         batched_perms = torch.rand(
-            n_features, n_permutations, batch_size, device=X_batch.device
+            n_features, n_permutations, batch_size, device=X_batch.device, generator=rng
         ).argsort(dim=2)
 
         # Permute in-place in a batched way on 2 dimensions

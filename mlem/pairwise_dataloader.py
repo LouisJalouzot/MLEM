@@ -16,6 +16,7 @@ class PairwiseDataloader:
         interactions: bool = False,
         nan_to_num: float = 0.0,
         min_max_scale: bool = True,
+        rng: tp.Optional[torch.Generator] = None,
         # memory: str = "low",  # TODO: Implement a low memory version if necessary
     ):
         """Initializes the PairwiseDataloader.
@@ -37,6 +38,8 @@ class PairwiseDataloader:
                 feature distances.
             min_max_scale (bool, default=True): Whether to min-max scale the neural
                 distances for numerical stability.
+            rng (torch.Generator | None, default=None): A random number generator for
+                reproducible sampling.
         """
         self.X = X
         self.Y = Y
@@ -44,6 +47,7 @@ class PairwiseDataloader:
         self.interactions = interactions
         self.nan_to_num = nan_to_num
         self.min_max_scale = min_max_scale
+        self.rng = rng
 
         if Y is not None:
             assert (
@@ -198,8 +202,12 @@ class PairwiseDataloader:
         n_samples = batch_size * n_trials
         # Select indices to make batch_size pairs
         # (n_samples,)
-        ind_1 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
-        ind_2 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
+        ind_1 = torch.randint(
+            0, self.n_stimuli, (n_samples,), device=self.device, generator=self.rng
+        )
+        ind_2 = torch.randint(
+            0, self.n_stimuli, (n_samples,), device=self.device, generator=self.rng
+        )
 
         X_dist = self.sample_X(ind_1, ind_2)
         if self.Y is not None:
