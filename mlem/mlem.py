@@ -33,7 +33,7 @@ class MLEM:
         patience: int = 50,
         device: str = "cpu",
         verbose: bool = False,
-        memory: tp.Literal["low", "medium", "high"] = "high",
+        memory: tp.Literal["low", "medium", "high"] = "medium",
     ):
         """Initializes the MLEM model.
 

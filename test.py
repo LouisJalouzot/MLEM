@@ -16,4 +16,4 @@ X = pd.DataFrame({i: np.random.choice(["A", "B"], n_samples) for i in range(n_fe
 Y = pd.DataFrame({i: np.random.randn(n_samples) for i in range(hidden_size)})
 
 mlem.fit(X, Y)
-fi, s = mlem.score()
+fi, s = mlem.score(warning_threshold=1)

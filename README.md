@@ -6,6 +6,10 @@ You can install MLEM via pip directly from GitHub:
 pip install git+https://github.com/LouisJalouzot/MLEM_test
 ```
 
+MLEM depends on the library `torchsort` which requires a C++ compiler. If you want to use MLEM on GPU with CUDA, you also need to have CUDA toolkit installed.
+
+You can also install a pre-built version from [torchsort releases](https://github.com/teddykoker/torchsort/releases) (see the [CUDA errors](#-cuda-errors) section below for more details).
+
 # Usage
 
 ```python
