@@ -36,7 +36,7 @@ def compute_feature_importance(
     model: Model,
     dataloader: PairwiseDataloader,
     n_permutations: int = 5,
-    n_pairs: int = 4096,
+    batch_size: int = 256,
     verbose: bool = True,
     warning_threshold: float = 0.05,
     memory: str = "medium",
@@ -47,7 +47,7 @@ def compute_feature_importance(
         model (Model): The trained model.
         dataloader (PairwiseDataloader): The dataloader for sampling data.
         n_permutations (int, default=5): The number of permutations for each feature.
-        n_pairs (int, default=4096): The number of pairs to sample in each batch.
+        batch_size (int, default=256): The number of pairs to sample in each batch.
         verbose (bool, default=True): If True, displays a progress bar.
         warning_threshold (float, default=0.05): The threshold for score variability
             to trigger a warning.
@@ -67,13 +67,13 @@ def compute_feature_importance(
         baseline_scores = []
         pbar = tqdm(
             total=n_features * n_permutations,
-            desc=f"Computing feature importance on batches of size {n_pairs}",
+            desc=f"Computing feature importance on batches of size {batch_size}",
             disable=not verbose,
         )
         with pbar:
             for i, f in enumerate(feature_names):
                 for _ in range(n_permutations):
-                    X_batch, Y_batch = dataloader.sample(n_pairs)
+                    X_batch, Y_batch = dataloader.sample(batch_size)
                     score = model.spearman(model(X_batch), Y_batch).item()
                     baseline_scores.append(score)
                     X_batch[:, i] = X_batch[
@@ -91,14 +91,14 @@ def compute_feature_importance(
         baseline_scores = []
         pbar = tqdm(
             total=n_features,
-            desc=f"Computing feature importance on batches of size {n_pairs}",
+            desc=f"Computing feature importance on batches of size {batch_size}",
             disable=not verbose,
         )
         with pbar:
             for i, f in enumerate(feature_names):
-                X_batch, Y_batch = dataloader.sample(n_pairs, n_trials=n_permutations)
-                # (n_permutations, n_pairs, n_features)
-                # (n_permutations, n_pairs)
+                X_batch, Y_batch = dataloader.sample(batch_size, n_trials=n_permutations)
+                # (n_permutations, batch_size, n_features)
+                # (n_permutations, batch_size)
 
                 # Compute baseline scores
                 # (n_permutations,)
@@ -106,9 +106,9 @@ def compute_feature_importance(
                 baseline_scores.extend(baseline_score.cpu().numpy())
 
                 # Permute feature i
-                # (n_permutations, n_pairs)
+                # (n_permutations, batch_size)
                 batched_perms = torch.rand(
-                    n_permutations, n_pairs, device=X_batch.device
+                    n_permutations, batch_size, device=X_batch.device
                 ).argsort(dim=1)
                 X_batch[:, :, i] = X_batch[:, :, i].gather(dim=1, index=batched_perms)
 
@@ -123,32 +123,32 @@ def compute_feature_importance(
 
     else:  # memory == "high"
         n_total_trials = n_features * n_permutations
-        X_batch, Y_batch = dataloader.sample(n_pairs, n_trials=n_total_trials)
-        # (n_features, n_permutations, n_pairs, n_features)
-        X_batch = X_batch.reshape(n_features, n_permutations, n_pairs, n_features)
-        # (n_features, n_permutations, n_pairs)
-        Y_batch = Y_batch.reshape(n_features, n_permutations, n_pairs)
+        X_batch, Y_batch = dataloader.sample(batch_size, n_trials=n_total_trials)
+        # (n_features, n_permutations, batch_size, n_features)
+        X_batch = X_batch.reshape(n_features, n_permutations, batch_size, n_features)
+        # (n_features, n_permutations, batch_size)
+        Y_batch = Y_batch.reshape(n_features, n_permutations, batch_size)
 
         # Compute baseline scores
         # (n_features, n_permutations)
         baseline_scores = batch_spearman(model(X_batch), Y_batch, dim=2)
 
-        # Generate batched permutations on the n_pairs dimension efficiently
+        # Generate batched permutations on the batch_size dimension efficiently
         # from https://discuss.pytorch.org/t/batch-version-of-torch-randperm/111121/3
-        # (n_features, n_permutations, n_pairs)
+        # (n_features, n_permutations, batch_size)
         batched_perms = torch.rand(
-            n_features, n_permutations, n_pairs, device=X_batch.device
+            n_features, n_permutations, batch_size, device=X_batch.device
         ).argsort(dim=2)
 
         # Perform in-place batched column permutations
         # batched_perms[f] will be used to permute X_batch[f, :, :, f] in a batched way
 
         # Get a diagonal view of the data to permute
-        # (n_permutations, n_pairs, n_features)
+        # (n_permutations, batch_size, n_features)
         diag_view = X_batch.diagonal(dim1=0, dim2=3, offset=0)
-        # (n_features, n_permutations, n_pairs)
+        # (n_features, n_permutations, batch_size)
         diag_view = diag_view.permute(2, 0, 1)
-        # Permute along dimension n_pairs and copy in original tensor X_batch
+        # Permute along dimension batch_size and copy in original tensor X_batch
         diag_view.copy_(diag_view.gather(dim=2, index=batched_perms))
 
         # Compute permuted scores
@@ -168,7 +168,7 @@ def compute_feature_importance(
     if var > warning_threshold:
         warnings.warn(
             f"Warning: High score variability between batches (std={var} > warning threshold={warning_threshold}). "
-            "Consider decreasing `threshold`, increasing `starting_n_pairs` or directly `n_pairs`.",
+            "Consider decreasing `threshold`, increasing `batch_size_min` or directly `batch_size`.",
             UserWarning,
         )
 

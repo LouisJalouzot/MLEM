@@ -39,29 +39,29 @@ def batch_corrcoef(
 
 def estimate_batch_size(
     dataloader: PairwiseDataloader,
-    starting_n_pairs: int = 4096,
+    batch_size_min: int = 256,
     n_trials: int = 64,
     threshold: float = 0.01,
     factor: float = 1.2,
-    max_n_pairs: int = 2**20,
+    batch_size_max: int = 2**20,
     verbose: bool = True,
 ) -> int:
     """Estimate a minimal batch size for training.
 
-    It samples `n_trials` batches of feature distances on `n_pairs` pairs of stimuli,
-    and computes the correlation between all pairs of features along the stimuli dimension.
-    If the standard deviation of these correlations across trials is below `threshold`,
-    the current `n_pairs` is returned. Otherwise, it multiplies the number of pairs by
-    `factor` and repeats the process.
+    It samples `n_trials` batches of feature distances on `batch_size` pairs of stimuli,
+    and computes the correlation between all pairs of features along the stimuli
+    dimension. If the standard deviation of these correlations across trials is below
+    `threshold`, the current `batch_size` is returned. Otherwise, it multiplies the number
+    of pairs by `factor` and repeats the process.
 
     Args:
         dataloader (PairwiseDataloader): The dataloader to use for feature distances.
-        starting_n_pairs (int, default=4096): The initial number of pairs to sample.
+        batch_size_min (int, default=256): The initial number of pairs to sample.
         n_trials (int, default=64): The number of trials to estimate the standard
             deviation of correlations.
         threshold (float, default=0.01): The threshold for stopping the search.
         factor (float, default=1.2): The factor by which to increase the number of pairs.
-        max_n_pairs (int, default=2**20): The maximum number of pairs to sample.
+        batch_size_max (int, default=2**20): The maximum number of pairs to sample.
         verbose (bool, default=True): If True, displays a progress bar.
 
     Returns:
@@ -75,39 +75,39 @@ def estimate_batch_size(
         n = dataloader.n_features
     i, j = torch.triu_indices(n, n, 1)
 
-    n_pairs = starting_n_pairs
+    batch_size = batch_size_min
     pbar = tqdm(
-        total=int(np.log(max_n_pairs / n_pairs) / np.log(factor)),
+        total=int(np.log(batch_size_max / batch_size) / np.log(factor)),
         desc="Estimating batch size",
         disable=not verbose,
     )
     with pbar:
-        while n_pairs < max_n_pairs:
-            # (n_trials, n_pairs, n_features)
-            X_batch = dataloader.sample(n_pairs, n_trials)
-            # (n_trials, n_pairs)
+        while batch_size < batch_size_max:
+            # (n_trials, batch_size, n_features)
+            X_batch = dataloader.sample(batch_size, n_trials)
+            # (n_trials, batch_size)
             corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)  # type: ignore
 
             var = corrs.std(dim=0).max().item()
             pbar.set_postfix(
-                {"Batch size": n_pairs, "max std": var, "threshold": threshold}
+                {"Batch size": batch_size, "max std": var, "threshold": threshold}
             )
             if var < threshold:
                 if verbose:
                     print(
-                        f"Batch size: {n_pairs} sufficient (max std: {var:.2g} < threshold: {threshold})"
+                        f"Batch size: {batch_size} sufficient (max std: {var:.2g} < threshold: {threshold})"
                     )
                 pbar.total = pbar.n
                 pbar.refresh()
                 break
-            n_pairs = int(n_pairs * factor)
+            batch_size = int(batch_size * factor)
             pbar.update(1)
 
-    if n_pairs >= max_n_pairs:
+    if batch_size >= batch_size_max:
         warnings.warn(
-            f"Max number of pairs ({max_n_pairs:2g}) reached during batch size estimation. "
-            f"Returning current number of pairs: {n_pairs:2g}.",
+            f"Max number of pairs ({batch_size_max:2g}) reached during batch size estimation. "
+            f"Returning current number of pairs: {batch_size:2g}.",
             UserWarning,
         )
 
-    return n_pairs
+    return batch_size

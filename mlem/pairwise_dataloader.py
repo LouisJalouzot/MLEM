@@ -31,8 +31,8 @@ class PairwiseDataloader:
             distance (str or callable, default='euclidean'): The distance metric to use
                 for Y. Can be 'euclidean', 'manhattan', 'cosine', 'norm_diff',
                 'precomputed', or a custom callable that takes two tensors of shape
-                (n_pairs, hidden_dim) and returns a tensor of distances of shape
-                (n_pairs,).
+                (batch_size, hidden_dim) and returns a tensor of distances of shape
+                (batch_size,).
             interactions (bool, default=False): Whether to include feature interactions.
             nan_to_num (float, default=0.0): Value to replace NaNs with when computing
                 feature distances.
@@ -171,33 +171,33 @@ class PairwiseDataloader:
         return Y_dist**2
 
     def sample(
-        self, n_pairs: int = 4096, n_trials: int = 1
+        self, batch_size: int = 4096, n_trials: int = 1
     ) -> tp.Tuple[torch.Tensor, torch.Tensor] | torch.Tensor:
         """Samples pairs of stimuli and computes their feature and neural distances.
 
-        This method efficiently samples `n_pairs` x `n_trials` pairs of stimuli and
+        This method efficiently samples `batch_size` x `n_trials` pairs of stimuli and
         computes the pairwise distances for features (X) and neural representations (Y).
         If `distance` is 'precomputed', it directly retrieves precomputed distances.
         Otherwise, it computes distances on the fly.
 
         Args:
-            n_pairs (int, default=4096): The number of pairs to sample per trial.
+            batch_size (int, default=4096): The number of pairs to sample per trial.
             n_trials (int, default=1): The number of independent sampling trials.
 
         Returns:
             (torch.Tensor, torch.Tensor) | torch.Tensor:
                 - X_dist (torch.Tensor): The feature distances. Shape is
-                    (n_pairs, n_features) if n_trials is 1,
-                  or (n_trials, n_pairs, n_features) otherwise.
+                    (batch_size, n_features) if n_trials is 1,
+                  or (n_trials, batch_size, n_features) otherwise.
                 - Y_dist (torch.Tensor): The neural distances.
-                  Shape is (n_pairs,) if n_trials is 1,
-                  or (n_trials, n_pairs) otherwise.
+                  Shape is (batch_size,) if n_trials is 1,
+                  or (n_trials, batch_size) otherwise.
                 If Y is None, only X_dist is returned.
         """
-        # Sample n_pairs pairs and compute feature and neural pairwise distances
+        # Sample batch_size pairs and compute feature and neural pairwise distances
         # Do n_trials different samplings efficiently
-        n_samples = n_pairs * n_trials
-        # Select indices to make n_pairs pairs
+        n_samples = batch_size * n_trials
+        # Select indices to make batch_size pairs
         # (n_samples,)
         ind_1 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
         ind_2 = torch.randint(0, self.n_stimuli, (n_samples,), device=self.device)
@@ -206,11 +206,11 @@ class PairwiseDataloader:
         if self.Y is not None:
             Y_dist = self.sample_Y(ind_1, ind_2)
 
-        # Reshape to (n_trials, n_pairs, ...) shape if n_trials > 1
+        # Reshape to (n_trials, batch_size, ...) shape if n_trials > 1
         if n_trials > 1:
-            X_dist = X_dist.reshape(n_trials, n_pairs, -1).squeeze()
+            X_dist = X_dist.reshape(n_trials, batch_size, -1).squeeze()
             if self.Y is not None:
-                Y_dist = Y_dist.reshape(n_trials, n_pairs).squeeze()
+                Y_dist = Y_dist.reshape(n_trials, batch_size).squeeze()
 
         if self.Y is None:
             return X_dist

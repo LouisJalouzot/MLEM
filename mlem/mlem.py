@@ -22,12 +22,12 @@ class MLEM:
             | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
         ) = "euclidean",
         nan_to_num: float = 0.0,
-        n_pairs: int | None = None,
+        batch_size: int | None = None,
         n_trials: int = 16,
         threshold: float = 0.02,
         factor: float = 1.2,
-        starting_n_pairs: int = 256,
-        max_n_pairs: int = 2**20,
+        batch_size_min: int = 256,
+        batch_size_max: int = 2**20,
         max_steps: int = 1000,
         lr: float = 0.1,
         weight_decay: float = 0.0,
@@ -51,20 +51,20 @@ class MLEM:
                 distance matrix.
             nan_to_num (float, default=0.0): The value used to replace any NaN values that
                 may arise during feature distances computation.
-            n_pairs (int | None, default=None): The number of pairs of stimuli to sample
+            batch_size (int | None, default=None): The number of pairs of stimuli to sample
                 in each batch during training and scoring. If None, a batch size is
                 automatically estimated.
             n_trials (int, default=16): The number of batches to sample when automatically
-                estimating the batch size (`n_pairs`). A higher number leads to a more
+                estimating the batch size (`batch_size`). A higher number leads to a more
                 reliable estimate.
             threshold (float, default=0.02): The stability threshold for automatic batch
                 size estimation. The estimation process stops when the standard deviation
                 of feature-feature correlations across trials falls below this value.
-            factor (float, default=1.2): The multiplicative factor by which `n_pairs` is
+            factor (float, default=1.2): The multiplicative factor by which `batch_size` is
                 increased at each step of the automatic batch size estimation.
-            starting_n_pairs (int, default=256): The initial number of pairs to try when
+            batch_size_min (int, default=256): The initial number of pairs to try when
                 starting the automatic batch size estimation.
-            max_n_pairs (int, default=2**20): Maximum number of pairs to consider
+            batch_size_max (int, default=2**20): Maximum number of pairs to consider
                 during automatic batch size estimation.
             max_steps (int, default=1000): Maximum number of training steps.
             lr (float, default=0.1): The learning rate for the AdamW optimizer used to
@@ -89,12 +89,12 @@ class MLEM:
         self.n_permutations = n_permutations
         self.distance = distance
         self.nan_to_num = nan_to_num
-        self.n_pairs = n_pairs
+        self.batch_size = batch_size
         self.n_trials = n_trials
         self.threshold = threshold
         self.factor = factor
-        self.starting_n_pairs = starting_n_pairs
-        self.max_n_pairs = max_n_pairs
+        self.batch_size_min = batch_size_min
+        self.batch_size_max = batch_size_max
         self.max_steps = max_steps
         self.lr = lr
         self.weight_decay = weight_decay
@@ -107,7 +107,7 @@ class MLEM:
         self.feature_names = None
         self.X_ = None
         self.Y_ = None
-        self.n_pairs_fit_ = None
+        self.batch_size_fit_ = None
 
     def fit(
         self,
@@ -140,26 +140,26 @@ class MLEM:
         self.X_ = self._preprocess_features(X)
         self.Y_ = self._preprocess_representations(Y)
 
-        if self.n_pairs is None:
+        if self.batch_size is None:
             dl_estimation = PairwiseDataloader(
                 X=self.X_,
                 Y=None,
                 feature_names=self.feature_names,
                 distance=self.distance,  # type: ignore
-                interactions=False,  # n_pairs is estimated with correlations between features not between pairs of features
+                interactions=False,  # batch_size is estimated with correlations between features not between pairs of features
                 nan_to_num=self.nan_to_num,
             )
-            self.n_pairs_fit_ = estimate_batch_size(
+            self.batch_size_fit_ = estimate_batch_size(
                 dl_estimation,
-                self.starting_n_pairs,
+                self.batch_size_min,
                 self.n_trials,
                 self.threshold,
                 self.factor,
-                self.max_n_pairs,
+                self.batch_size_max,
                 self.verbose,
             )
         else:
-            self.n_pairs_fit_ = self.n_pairs
+            self.batch_size_fit_ = self.batch_size
 
         dl = PairwiseDataloader(
             X=self.X_,
@@ -189,12 +189,12 @@ class MLEM:
         self.model_.train()
         pbar = tqdm(
             total=self.max_steps,
-            desc=f"Fitting model with batches of size {self.n_pairs_fit_}",
+            desc=f"Fitting model with batches of size {self.batch_size_fit_}",
             disable=not self.verbose,
         )
         with pbar:
             for _ in range(self.max_steps):
-                X_batch, Y_batch = dl.sample(self.n_pairs_fit_)
+                X_batch, Y_batch = dl.sample(self.batch_size_fit_)
                 optimizer.zero_grad()
                 Y_pred = self.model_(X_batch)
                 score = self.model_.spearman_diff(Y_pred, Y_batch)
@@ -229,7 +229,7 @@ class MLEM:
         X: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
         Y: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
         warning_threshold: float = 0.05,
-        n_pairs: int | None = None,
+        batch_size: int | None = None,
     ) -> tuple[pd.DataFrame, pd.Series]:
         """Computes permutation feature importances.
 
@@ -244,14 +244,14 @@ class MLEM:
                 None, the training data is used.
             warning_threshold (float): The threshold for the standard deviation of
                 baseline scores above which a warning is issued.
-            n_pairs (int | None): The number of pairs to use for scoring. If None, the
+            batch_size (int | None): The number of pairs to use for scoring. If None, the
                 number of pairs used during fitting is used.
 
         Returns:
             tuple[pd.DataFrame, pd.Series]: A tuple containing a DataFrame of feature
                 importances and a Series of baseline scores across permutations.
         """
-        if self.model_ is None or self.n_pairs_fit_ is None:
+        if self.model_ is None or self.batch_size_fit_ is None:
             raise RuntimeError("You must call fit before calling score.")
         if X is None or Y is None:
             assert (
@@ -277,8 +277,8 @@ class MLEM:
             self.model_,
             dataloader=dl,
             n_permutations=self.n_permutations,
-            # If not overridden, use the n_pairs used during fitting
-            n_pairs=n_pairs or self.n_pairs or self.n_pairs_fit_,  # type: ignore
+            # If not overridden, use the batch_size used during fitting
+            batch_size=batch_size or self.batch_size or self.batch_size_fit_,  # type: ignore
             verbose=self.verbose,
             warning_threshold=warning_threshold,
             memory=self.memory,
