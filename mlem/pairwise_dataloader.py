@@ -8,12 +8,11 @@ class PairwiseDataloader:
     def __init__(
         self,
         X: torch.Tensor,
-        Y: torch.Tensor | None,
-        feature_names: tp.List[str] | None = None,
-        distance: (
-            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
-            | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-        ) = "euclidean",
+        Y: tp.Optional[torch.Tensor],
+        feature_names: tp.Optional[list[str]] = None,
+        distance: tp.Union[
+            str, tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+        ] = "euclidean",
         interactions: bool = False,
         nan_to_num: float = 0.0,
         min_max_scale: bool = True,
@@ -27,7 +26,7 @@ class PairwiseDataloader:
             Y (torch.Tensor | None): Neural representation tensor of shape
                 (n_stimuli, hidden_dim) or (n_stimuli, n_stimuli) if `distance` is
                 'precomputed'.
-            feature_names (tp.List[str] | None, default=None): List of feature names.
+            feature_names (list[str] | None, default=None): List of feature names.
             distance (str or callable, default='euclidean'): The distance metric to use
                 for Y. Can be 'euclidean', 'manhattan', 'cosine', 'norm_diff',
                 'precomputed', or a custom callable that takes two tensors of shape
@@ -172,7 +171,7 @@ class PairwiseDataloader:
 
     def sample(
         self, batch_size: int = 4096, n_trials: int = 1
-    ) -> tp.Tuple[torch.Tensor, torch.Tensor] | torch.Tensor:
+    ) -> tp.Union[tp.Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """Samples pairs of stimuli and computes their feature and neural distances.
 
         This method efficiently samples `batch_size` x `n_trials` pairs of stimuli and

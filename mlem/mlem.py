@@ -17,12 +17,11 @@ class MLEM:
         interactions: bool = False,
         # conditional_pfi: bool = True, # TODO: implement conditional PFI
         n_permutations: int = 5,
-        distance: (
-            tp.Literal["euclidean", "manhattan", "cosine", "norm_diff", "precomputed"]
-            | tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-        ) = "euclidean",
+        distance: tp.Union[
+            str, tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+        ] = "euclidean",
         nan_to_num: float = 0.0,
-        batch_size: int | None = None,
+        batch_size: tp.Optional[int] = None,
         n_trials: int = 16,
         threshold: float = 0.02,
         factor: float = 1.2,
@@ -111,9 +110,9 @@ class MLEM:
 
     def fit(
         self,
-        X: pd.DataFrame | np.ndarray | torch.Tensor,
-        Y: pd.DataFrame | np.ndarray | torch.Tensor,
-        feature_names: list[str] | None = None,
+        X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
+        Y: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
+        feature_names: tp.Optional[list[str]] = None,
     ) -> "MLEM":
         """Fits the MLEM model to the provided data.
 
@@ -226,10 +225,10 @@ class MLEM:
 
     def score(
         self,
-        X: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
-        Y: pd.DataFrame | np.ndarray | torch.Tensor | None = None,
+        X: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]] = None,
+        Y: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]] = None,
         warning_threshold: float = 0.05,
-        batch_size: int | None = None,
+        batch_size: tp.Optional[int] = None,
     ) -> tuple[pd.DataFrame, pd.Series]:
         """Computes permutation feature importances.
 
@@ -298,7 +297,7 @@ class MLEM:
         return self.model_.format_W(self.feature_names)
 
     def _preprocess_representations(
-        self, Y: pd.DataFrame | pd.Series | np.ndarray | torch.Tensor
+        self, Y: tp.Union[pd.DataFrame, pd.Series, np.ndarray, torch.Tensor]
     ) -> torch.Tensor:
         """Preprocesses the neural representation data by converting it to a
         torch.Tensor.
@@ -318,7 +317,7 @@ class MLEM:
         return Y.to(self.device)  # type: ignore
 
     def _preprocess_features(
-        self, X: pd.DataFrame | np.ndarray | torch.Tensor
+        self, X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]
     ) -> torch.Tensor:
         """Preprocesses the feature data by encoding and converting it to a
         torch.Tensor.

@@ -1,3 +1,5 @@
+import typing as tp
+
 import numpy as np
 import pandas as pd
 import torch
@@ -22,9 +24,9 @@ class CholeskySPD(nn.Module):
         super().__init__()
         self.n_features = n_features
         tril = torch.tril_indices(n_features, n_features, offset=0)
-        self.register_buffer("rows", tril[0])
-        self.register_buffer("cols", tril[1])
-        self.register_buffer("diag_indices", torch.arange(n_features))
+        self.rows = tril[0]
+        self.cols = tril[1]
+        self.diag_indices = torch.arange(n_features)
 
     def forward(self, w: torch.Tensor) -> torch.Tensor:
         """Builds an SPD matrix from a vector of lower triangular elements.
@@ -85,6 +87,9 @@ class Model(nn.Module):
         super().__init__()
         self.n_features = n_features
         self.interactions = interactions
+        triu = torch.triu_indices(n_features, n_features, 0)
+        self.rows = triu[0]
+        self.cols = triu[1]
 
         if self.interactions:
             n_params = n_features * (n_features + 1) // 2
@@ -107,7 +112,7 @@ class Model(nn.Module):
         """
         return X @ self.W
 
-    def format_W(self, features: list[str] | None = None) -> pd.DataFrame:
+    def format_W(self, features: tp.Optional[list[str]] = None) -> pd.DataFrame:
         """Formats the learned weights into a pandas DataFrame.
 
         Args:
@@ -121,7 +126,7 @@ class Model(nn.Module):
         W = self.W.detach().cpu().squeeze().numpy()
         if self.interactions:
             W_square = np.full((self.n_features, self.n_features), float("nan"))
-            W_square[*np.triu_indices(self.n_features)] = W
+            W_square[self.rows, self.cols] = W
             return pd.DataFrame(W_square, index=features, columns=features)
         else:
             return pd.DataFrame(W, index=features, columns=["Weight"])
