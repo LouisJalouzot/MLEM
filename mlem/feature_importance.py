@@ -178,9 +178,9 @@ def compute_feature_importance(
     var = baseline_scores.std()
     if var > warning_threshold:
         warnings.warn(
-            f"Warning: High score variability between batches (std={var} > warning threshold={warning_threshold}). "
-            "Consider decreasing `threshold` or increasing `batch_size_min` for a better estimation of `batch_size`. "
-            "Alternatively, you can manually increase `batch_size`.",
+            f"Warning: There is a high variability in score between batches (std={var:.3f} > {warning_threshold:.3f}=warning threshold).\n"
+            "   Consider decreasing `threshold` or increasing `batch_size_min` for a better estimation of `batch_size`.\n"
+            "   Alternatively, you can manually increase `batch_size`.",
             UserWarning,
         )
 
