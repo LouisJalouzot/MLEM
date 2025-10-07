@@ -8,8 +8,8 @@ from torchsort import soft_rank
 
 
 class CholeskySPD(nn.Module):
-    """Creates a Symmetric Positive Definite (SPD) matrix from a vector of
-    lower triangular elements.
+    """Parametrizes a vector of lower triangular elements into a Symmetric Positive
+    Definite (SPD) matrix using the Cholesky decomposition.
     """
 
     def __init__(self, n_features: int):
@@ -36,13 +36,14 @@ class CholeskySPD(nn.Module):
         Returns:
             torch.Tensor: The flattened lower triangular part of the resulting SPD matrix.
         """
-        # Build lower triangular matrix L from vector w
+        # Build empty lower triangular matrix L with same dtype and device as w
         L = w.new_zeros(self.n_features, self.n_features)
+        # Fill the lower triangular part of L with elements from w
         L[self.rows, self.cols] = w  # type: ignore
         # Ensure diagonal elements are positive
         diag = L[self.diag_indices, self.diag_indices]  # type: ignore
         L[self.diag_indices, self.diag_indices] = F.softplus(diag)  # type: ignore
-        # Build the SPD matrix W = L @ L^T
+        # Build the SPD matrix W = LL.T
         W = torch.matmul(L, L.T)
         # Normalize W to have unit Frobenius norm
         W = W / torch.linalg.vector_norm(W)
