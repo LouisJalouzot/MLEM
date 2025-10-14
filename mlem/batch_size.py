@@ -78,7 +78,7 @@ def estimate_batch_size(
     batch_size = batch_size_min
     pbar = tqdm(
         total=int(np.log(batch_size_max / batch_size) / np.log(factor)),
-        desc="Estimating batch size",
+        desc=f"Estimating batch size on {dataloader.device}",
         disable=not verbose,
     )
     with pbar:
@@ -93,10 +93,6 @@ def estimate_batch_size(
                 {"Batch size": batch_size, "max std": var, "threshold": threshold}
             )
             if var < threshold:
-                if verbose:
-                    print(
-                        f"Batch size: {batch_size} sufficient (max std: {var:.2g} < threshold: {threshold})"
-                    )
                 pbar.total = pbar.n
                 pbar.refresh()
                 break
@@ -108,6 +104,10 @@ def estimate_batch_size(
             f"Max number of pairs ({batch_size_max:2g}) reached during batch size estimation. "
             f"Returning current number of pairs: {batch_size:2g}.",
             UserWarning,
+        )
+    elif verbose:
+        print(
+            f"Batch size: {batch_size} sufficient (max std: {var:.2g} < threshold: {threshold})"
         )
 
     return batch_size

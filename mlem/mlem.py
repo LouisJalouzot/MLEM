@@ -113,7 +113,9 @@ class MLEM:
         self.batch_size_fit_ = None
         self.rng_ = None
         if self.random_seed is not None:
-            self.rng_ = torch.Generator(device=self.device).manual_seed(self.random_seed)
+            self.rng_ = torch.Generator(device=self.device).manual_seed(
+                self.random_seed
+            )
 
     def fit(
         self,
@@ -190,8 +192,6 @@ class MLEM:
             lr=self.lr,
             weight_decay=self.weight_decay,
             maximize=True,
-            amsgrad=True,
-            fused=True,
         )
 
         best_spearman = -torch.inf
@@ -200,7 +200,7 @@ class MLEM:
         self.model_.train()
         pbar = tqdm(
             total=self.max_steps,
-            desc=f"Fitting model with batches of size {self.batch_size_fit_}",
+            desc=f"Fitting model with batches of size {self.batch_size_fit_} on {dl.device}",
             disable=not self.verbose,
         )
         with pbar:

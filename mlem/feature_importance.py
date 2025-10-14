@@ -80,7 +80,7 @@ def compute_feature_importance(
         baseline_scores = []
         pbar = tqdm(
             total=n_features * n_permutations,
-            desc=f"Computing feature importance on batches of size {batch_size}",
+            desc=f"Computing feature importance with batches of size {batch_size} on {dataloader.device}",
             disable=not verbose,
         )
         with pbar:
@@ -104,14 +104,16 @@ def compute_feature_importance(
         baseline_scores = []
         pbar = tqdm(
             total=n_features,
-            desc=f"Computing feature importance on batches of size {batch_size}",
+            desc=f"Computing feature importance with batches of size {batch_size} on {dataloader.device}",
             disable=not verbose,
         )
         with pbar:
             for i, f in enumerate(feature_names):
                 # (n_permutations, batch_size, n_features)
                 # (n_permutations, batch_size)
-                X_batch, Y_batch = dataloader.sample(batch_size, n_trials=n_permutations)
+                X_batch, Y_batch = dataloader.sample(
+                    batch_size, n_trials=n_permutations
+                )
 
                 # Compute baseline scores
                 # (n_permutations,)
@@ -132,7 +134,9 @@ def compute_feature_importance(
                 # (n_permutations,)
                 permuted_score = batch_spearman(model(X_batch), Y_batch, dim=1)
 
-                all_importances[f].extend((baseline_score - permuted_score).cpu().numpy())
+                all_importances[f].extend(
+                    (baseline_score - permuted_score).cpu().numpy()
+                )
                 pbar.update(1)
         all_importances = pd.DataFrame(all_importances)
         baseline_scores = pd.Series(baseline_scores, name="spearman")
