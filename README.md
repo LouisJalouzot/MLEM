@@ -67,7 +67,7 @@ fi, s = mlem.score()
 
 ## Variability across runs
 
-If you observe a lot of variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training. To mitigate this, you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50) and/or decrease `threshold` (e.g. to 0.01 instead of the default 0.2) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note a larger `batch_size` will increase memory usage and increase computation time.
+If you observe a lot of variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training. To mitigate this, you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50) and/or decrease `threshold` (e.g. to 0.005 instead of the default 0.01) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note a larger `batch_size` will increase memory usage and increase computation time.
 
 ## Out of memory errors
 
@@ -75,6 +75,6 @@ If you observe a lot of variability in feature importance or score across runs o
 
 If you encounter out of memory errors when computing feature importances you can try setting the parameter `memory` to `'low'` when initializing MLEM. This will reduce memory usage at the cost of increased computation time. On the other hand, if you have a lot of memory available, you can set `memory` to `'high'` to speed up computation.
 
-### During training
+### During batch size estimation or during training
 
-If you encounter out of memory errors during training, you can try increasing the `threshold` parameter (e.g. to 0.01 instead of the default 0.2) so that the estimated `batch_size` is smaller. Or directly set the `batch_size` parameter to a smaller value. Note that this will decrease the precision of the method and induce more variability across runs.
+If you encounter out of memory errors during batch size estimation or during training, you can try increasing the `threshold` parameter (e.g. to 0.02 instead of the default 0.01) so that the estimated `batch_size` is smaller. Or directly set the `batch_size` parameter to a smaller value. Note that this will decrease the precision of the method and induce more variability across runs.

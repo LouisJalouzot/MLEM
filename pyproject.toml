@@ -14,16 +14,16 @@ requires-python = ">=3.10"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
-    "fast-soft-sort @ git+https://github.com/google-research/fast-soft-sort.git@pull/23/head",
-    "numpy>=2.0.0",
-    "pandas>=2.2.0",
-    "torch>=2.3.0",
-    "tqdm>=4.27.0",
-    "typing-extensions>=4.0.0",
+  "fast-soft-sort @ git+https://github.com/google-research/fast-soft-sort.git@pull/23/head",
+  "numpy>=2.0.0",
+  "pandas>=2.2.0",
+  "torch>=2.3.0",
+  "tqdm>=4.27.0",
+  "typing-extensions>=4.0.0",
 ]
 
 [project.urls]

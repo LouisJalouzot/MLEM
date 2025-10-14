@@ -91,9 +91,9 @@ class Model(nn.Module):
         super().__init__()
         self.n_features = n_features
         self.interactions = interactions
-        triu = torch.triu_indices(n_features, n_features, 0)
-        self.rows = triu[0]
-        self.cols = triu[1]
+        tril = torch.tril_indices(n_features, n_features, 0)
+        self.rows = tril[0]
+        self.cols = tril[1]
 
         if self.interactions:
             n_params = n_features * (n_features + 1) // 2

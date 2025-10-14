@@ -23,7 +23,7 @@ class MLEM:
         nan_to_num: float = 0.0,
         batch_size: tp.Optional[int] = None,
         n_trials: int = 16,
-        threshold: float = 0.02,
+        threshold: float = 0.01,
         factor: float = 1.2,
         batch_size_min: int = 256,
         batch_size_max: int = 2**20,

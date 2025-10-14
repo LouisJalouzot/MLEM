@@ -72,7 +72,9 @@ class PairwiseDataloader:
             self.feature_names = feature_names
         else:
             self.feature_names = [f"feature_{i}" for i in range(self.n_features)]
-        self.triu_indices = torch.triu_indices(self.n_features, self.n_features)
+        tril_indices = torch.tril_indices(self.n_features, self.n_features)
+        self.rows = tril_indices[0]
+        self.cols = tril_indices[1]
         if self.interactions:
             self.feature_names = [
                 (
@@ -80,7 +82,7 @@ class PairwiseDataloader:
                     if i != j
                     else self.feature_names[i]
                 )
-                for i, j in zip(*self.triu_indices)
+                for i, j in zip(self.rows, self.cols)
             ]
         self.device = X.device
         self.m = torch.inf
@@ -133,7 +135,7 @@ class PairwiseDataloader:
             X_dist = (X_1 - X_2).nan_to_num(self.nan_to_num).abs().clip(0, 1)
 
         if self.interactions:
-            X_dist = X_dist[:, self.triu_indices[0]] * X_dist[:, self.triu_indices[1]]
+            X_dist = X_dist[:, self.rows] * X_dist[:, self.cols]
         else:
             # Square the distances to match the squared neural distances
             X_dist **= 2
