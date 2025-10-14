@@ -6,10 +6,6 @@ You can install MLEM via pip directly from GitHub:
 pip install git+https://github.com/LouisJalouzot/MLEM_test
 ```
 
-MLEM depends on the library `torchsort` which requires a C++ compiler. If you want to use MLEM on GPU with CUDA, you also need to have CUDA toolkit installed.
-
-You can also install a pre-built version from [torchsort releases](https://github.com/teddykoker/torchsort/releases) (see the [CUDA errors](#-cuda-errors) section below for more details).
-
 # Usage
 
 ```python
@@ -71,7 +67,7 @@ fi, s = mlem.score()
 
 ## Variability across runs
 
-If you observe a lot of variability in feature importance or score across runs or seeds (set by `random_seed`), the model has likely not converged during training. To mitigate this, you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50) and/or decrease `threshold` (e.g. to 0.01 instead of the default 0.2) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note a larger `batch_size` will increase memory usage and increase computation time.
+If you observe a lot of variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training. To mitigate this, you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50) and/or decrease `threshold` (e.g. to 0.01 instead of the default 0.2) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note a larger `batch_size` will increase memory usage and increase computation time.
 
 ## Out of memory errors
 
@@ -82,29 +78,3 @@ If you encounter out of memory errors when computing feature importances you can
 ### During training
 
 If you encounter out of memory errors during training, you can try increasing the `threshold` parameter (e.g. to 0.01 instead of the default 0.2) so that the estimated `batch_size` is smaller. Or directly set the `batch_size` parameter to a smaller value. Note that this will decrease the precision of the method and induce more variability across runs.
-
-## Undefined symbol error
-
-When importing `torchsort`, you may encounter an error similar to:
-
-```console
-Error isotonic_cpu.cpython-310-x86_64-linux-gnu.so: undefined symbol: _ZNK3c105Error4whatEv
-```
-
-If this is the case, try using a newer version of PyTorch.
-
-## CUDA errors
-
-When trying to use torchsort on CUDA (i.e. when `device='cuda'`), you may encounter the following error:
-
-```console
-ImportError: You are trying to use the torchsort CUDA extension, but it looks like it is not available. Make sure you have the CUDA toolchain installed, and reinstall torchsort with `pip install --force-reinstall --no-cache-dir torchsort` to rebuild the extension.
-```
-
-One solution is to follow the instructions from the error message, i.e. install the CUDA toolchain and reinstall torchsort. However, if you do not have the ability to compile C++/CUDA code on your machine, you can also directly install a pre-built package from [torchsort releases](https://github.com/teddykoker/torchsort/releases), e.g. for Python 3.12, PyTorch 2.6, and CUDA 12.6:
-
-```bash
-pip install --force-reinstall --no-cache-dir --no-deps https://github.com/teddykoker/torchsort/releases/download/v0.1.10/torchsort-0.1.10+pt26cu126-cp312-cp312-linux_x86_64.whl
-```
-
-Note that not all combinations of Python/PyTorch/CUDA are available as pre-built packages.
