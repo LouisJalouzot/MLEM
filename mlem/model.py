@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
+from fast_soft_sort.pytorch_ops import soft_rank
 from torch import nn
 from torch.nn.utils import parametrize
-from torchsort import soft_rank
 
 
 class CholeskySPD(nn.Module):
@@ -76,7 +76,7 @@ class Model(nn.Module):
         self,
         n_features: int,
         interactions: bool = False,
-        device: tp.Optional[torch.device] = None,
+        device: tp.Optional[str] = None,
         rng: tp.Optional[torch.Generator] = None,
     ):
         """Initializes the Model module.

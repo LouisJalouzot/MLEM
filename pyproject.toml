@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Implementation of MLEM."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 classifiers = [
@@ -18,10 +18,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "fast-soft-sort @ git+https://github.com/google-research/fast-soft-sort.git@pull/23/head",
     "numpy>=2.0.0",
     "pandas>=2.2.0",
-    "torch>=1.9.0",
-    "torchsort>=0.1.10",
+    "torch>=2.3.0",
     "tqdm>=4.27.0",
     "typing-extensions>=4.0.0",
 ]
