@@ -48,7 +48,7 @@ class CholeskySPD(nn.Module):
         # Build the SPD matrix W = LL.T
         W = torch.matmul(L, L.T)
         # Normalize W to have unit Frobenius norm
-        W = W / torch.linalg.vector_norm(W)
+        W = W / W.norm(p="fro")
         # Return flattened lower triangular part of W
         return W[self.rows, self.cols]
 
