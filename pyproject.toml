@@ -18,7 +18,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "fast-soft-sort @ git+https://github.com/google-research/fast-soft-sort.git@pull/23/head",
+  "fast-soft-sort@ git+https://github.com/Markus28/fast-soft-sort.git@fix-torch-gpu",
   "numpy>=2.0.0",
   "pandas>=2.2.0",
   "torch>=2.3.0",
