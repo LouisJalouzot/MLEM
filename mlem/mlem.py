@@ -347,7 +347,7 @@ class MLEM:
         if isinstance(X, np.ndarray):
             X = torch.from_numpy(X)
 
-        return X.to(self.device)  # type: ignore
+        return X.float().to(self.device)  # type: ignore
 
     def _encode_df(self, df: pd.DataFrame) -> torch.Tensor:
         """Encodes a pandas DataFrame into a torch.Tensor.
