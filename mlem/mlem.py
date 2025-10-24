@@ -328,7 +328,14 @@ class MLEM:
         if isinstance(Y, np.ndarray):
             Y = torch.from_numpy(Y)
 
-        return Y.to(self.device)  # type: ignore
+        # add hidden size dimension if needed
+        if Y.ndim == 1:
+            Y = Y[:, None]
+
+        # flatten if needed
+        Y = Y.reshape(Y.shape[0], -1)  # type: ignore
+
+        return Y.float().to(self.device)  # type: ignore
 
     def _preprocess_features(
         self, X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]
