@@ -2,6 +2,7 @@ import typing as tp
 import warnings
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 import jax
 import jax.numpy as jnp

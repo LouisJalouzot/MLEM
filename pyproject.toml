@@ -11,8 +11,7 @@ authors = [
 description = "Implementation of MLEM."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+license = { text = "Apache-2.0" }
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
