@@ -1,36 +1,36 @@
 import warnings
 
 import numpy as np
-import torch
+import jax.numpy as jnp
 from tqdm.auto import tqdm
 
 from .pairwise_dataloader import PairwiseDataloader
 
 
 def batch_corrcoef(
-    x: torch.Tensor, y: torch.Tensor, dim: int = -1, eps: float = 1e-8
-) -> torch.Tensor:
+    x: jnp.ndarray, y: jnp.ndarray, dim: int = -1, eps: float = 1e-8
+) -> jnp.ndarray:
     """Compute the Pearson correlation coefficient between two batches of vectors.
 
     Args:
-        x (torch.Tensor): The first input tensor.
-        y (torch.Tensor): The second input tensor.
-        dim (int, default=-1): The dimension along which to compute the correlation.
-        eps (float, default=1e-8): A small value to avoid division by zero.
+        x: The first input array.
+        y: The second input array.
+        dim: The dimension along which to compute the correlation.
+        eps: A small value to avoid division by zero.
 
     Returns:
-        torch.Tensor: The batched Pearson correlation coefficients.
+        The batched Pearson correlation coefficients.
     """
-    x_mean = x.mean(dim=dim, keepdim=True)
-    y_mean = y.mean(dim=dim, keepdim=True)
+    x_mean = x.mean(axis=dim, keepdims=True)
+    y_mean = y.mean(axis=dim, keepdims=True)
 
     x_centered = x - x_mean
     y_centered = y - y_mean
 
-    covariance = (x_centered * y_centered).sum(dim=dim)
+    covariance = (x_centered * y_centered).sum(axis=dim)
 
-    x_std = torch.sqrt((x_centered**2).sum(dim=dim)) + eps
-    y_std = torch.sqrt((y_centered**2).sum(dim=dim)) + eps
+    x_std = jnp.sqrt((x_centered**2).sum(axis=dim)) + eps
+    y_std = jnp.sqrt((y_centered**2).sum(axis=dim)) + eps
 
     correlation = covariance / (x_std * y_std)
 
@@ -55,17 +55,17 @@ def estimate_batch_size(
     of pairs by `factor` and repeats the process.
 
     Args:
-        dataloader (PairwiseDataloader): The dataloader to use for feature distances.
-        batch_size_min (int, default=256): The initial number of pairs to sample.
-        n_trials (int, default=64): The number of trials to estimate the standard
+        dataloader: The dataloader to use for feature distances.
+        batch_size_min: The initial number of pairs to sample.
+        n_trials: The number of trials to estimate the standard
             deviation of correlations.
-        threshold (float, default=0.01): The threshold for stopping the search.
-        factor (float, default=1.2): The factor by which to increase the number of pairs.
-        batch_size_max (int, default=2**20): The maximum number of pairs to sample.
-        verbose (bool, default=True): If True, displays a progress bar.
+        threshold: The threshold for stopping the search.
+        factor: The factor by which to increase the number of pairs.
+        batch_size_max: The maximum number of pairs to sample.
+        verbose: If True, displays a progress bar.
 
     Returns:
-        int: Estimated batch size.
+        Estimated batch size.
     """
     assert factor > 1, "factor should be greater than 1"
 
@@ -73,12 +73,12 @@ def estimate_batch_size(
         n = dataloader.n_features * (dataloader.n_features - 1) // 2
     else:
         n = dataloader.n_features
-    i, j = torch.triu_indices(n, n, 1)
+    i, j = jnp.triu_indices(n, k=1)
 
     batch_size = batch_size_min
     pbar = tqdm(
         total=int(np.log(batch_size_max / batch_size) / np.log(factor)),
-        desc=f"Estimating batch size on {dataloader.device}",
+        desc=f"Estimating batch size",
         disable=not verbose,
     )
     with pbar:
@@ -86,9 +86,9 @@ def estimate_batch_size(
             # (n_trials, batch_size, n_features)
             X_batch = dataloader.sample(batch_size, n_trials)
             # (n_trials, batch_size)
-            corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)  # type: ignore
+            corrs = batch_corrcoef(X_batch[:, :, i], X_batch[:, :, j], dim=1)
 
-            var = corrs.std(dim=0).max().item()
+            var = float(corrs.std(axis=0).max())
             pbar.set_postfix(
                 {"Batch size": batch_size, "max std": var, "threshold": threshold}
             )

@@ -18,10 +18,12 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "fast-soft-sort @ git+https://github.com/LouisJalouzot/fast-soft-sort.git",
+  "fast-soft-sort @ git+https://github.com/google-research/fast-soft-sort.git",
+  "jax>=0.4.0",
+  "jaxlib>=0.4.0",
   "numpy>=2.0.0",
+  "optax>=0.1.0",
   "pandas>=2.2.0",
-  "torch>=2.3.0",
   "tqdm>=4.27.0",
   "typing-extensions>=4.0.0",
 ]

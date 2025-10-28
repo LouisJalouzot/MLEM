@@ -2,134 +2,127 @@ import typing as tp
 
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn.functional as F
-from fast_soft_sort.pytorch_ops import soft_rank
-from torch import nn
-from torch.nn.utils import parametrize
+import jax
+import jax.numpy as jnp
+from fast_soft_sort.jax_ops import soft_rank
 
 
-class CholeskySPD(nn.Module):
-    """Parametrizes a vector of lower triangular elements into a Symmetric Positive
+def cholesky_spd_transform(w: jnp.ndarray, n_features: int) -> jnp.ndarray:
+    """Transforms a vector of lower triangular elements into a Symmetric Positive
     Definite (SPD) matrix using the Cholesky decomposition.
+    
+    Args:
+        w: A 1D array containing the elements for the lower triangular matrix.
+        n_features: The number of features, which determines the size of the matrix.
+        
+    Returns:
+        The flattened lower triangular part of the resulting SPD matrix.
     """
-
-    def __init__(self, n_features: int):
-        """Initializes the CholeskySPD module.
-
-        Args:
-            n_features (int): The number of features, which determines the size of the
-                matrix.
-        """
-        super().__init__()
-        self.n_features = n_features
-        tril = torch.tril_indices(n_features, n_features, offset=0)
-        self.rows = tril[0]
-        self.cols = tril[1]
-        self.diag_indices = torch.arange(n_features)
-
-    def forward(self, w: torch.Tensor) -> torch.Tensor:
-        """Builds an SPD matrix from a vector of lower triangular elements.
-
-        Args:
-            w (torch.Tensor): A 1D tensor containing the elements for the lower triangular
-                matrix.
-
-        Returns:
-            torch.Tensor: The flattened lower triangular part of the resulting SPD matrix.
-        """
-        # Build empty lower triangular matrix L with same dtype and device as w
-        L = w.new_zeros(self.n_features, self.n_features)
-        # Fill the lower triangular part of L with elements from w
-        L[self.rows, self.cols] = w  # type: ignore
-        # Ensure diagonal elements are positive
-        diag = L[self.diag_indices, self.diag_indices]  # type: ignore
-        L[self.diag_indices, self.diag_indices] = F.softplus(diag)  # type: ignore
-        # Build the SPD matrix W = LL.T
-        W = torch.matmul(L, L.T)
-        # Normalize W to have unit Frobenius norm
-        W = W / W.norm(p="fro")
-        # Return flattened lower triangular part of W
-        return W[self.rows, self.cols]
+    tril = jnp.tril_indices(n_features, k=0)
+    rows, cols = tril[0], tril[1]
+    diag_indices = jnp.arange(n_features)
+    
+    # Build empty lower triangular matrix L
+    L = jnp.zeros((n_features, n_features), dtype=w.dtype)
+    # Fill the lower triangular part of L with elements from w
+    L = L.at[rows, cols].set(w)
+    # Ensure diagonal elements are positive
+    diag = L[diag_indices, diag_indices]
+    L = L.at[diag_indices, diag_indices].set(jax.nn.softplus(diag))
+    # Build the SPD matrix W = LL.T
+    W = jnp.matmul(L, L.T)
+    # Normalize W to have unit Frobenius norm
+    W = W / jnp.linalg.norm(W, ord='fro')
+    # Return flattened lower triangular part of W
+    return W[rows, cols]
 
 
-class Positive(nn.Module):
-    """A module that ensures the output tensor is positive and has a unit L2 norm."""
-
-    def forward(self, w: torch.Tensor) -> torch.Tensor:
-        """Applies softplus to ensure positivity and normalizes to unit L2 norm.
-
-        Args:
-            w (torch.Tensor): The input tensor.
-
-        Returns:
-            torch.Tensor: The processed tensor with positive values and unit L2 norm.
-        """
-        # Ensure weights are positive
-        w_pos = F.softplus(w)
-        # Keep to L2 norm 1
-        return w_pos / w_pos.norm()
+def positive_transform(w: jnp.ndarray) -> jnp.ndarray:
+    """Ensures the output array is positive and has a unit L2 norm.
+    
+    Args:
+        w: The input array.
+        
+    Returns:
+        The processed array with positive values and unit L2 norm.
+    """
+    # Ensure weights are positive
+    w_pos = jax.nn.softplus(w)
+    # Keep to L2 norm 1
+    return w_pos / jnp.linalg.norm(w_pos)
 
 
-class Model(nn.Module):
+class Model:
+    """JAX-based model for MLEM."""
+    
     def __init__(
         self,
         n_features: int,
         interactions: bool = False,
-        device: tp.Optional[str] = None,
-        rng: tp.Optional[torch.Generator] = None,
+        rng: tp.Optional[jax.random.PRNGKey] = None,
     ):
-        """Initializes the Model module.
+        """Initializes the Model.
 
         Args:
-            n_features (int): The number of input features.
-            interactions (bool, default=False): If True, learns an SPD matrix for feature
+            n_features: The number of input features.
+            interactions: If True, learns an SPD matrix for feature
                 interactions. If False, learns a positive vector of feature weights.
-            rng (torch.Generator | None, default=None): A random number generator for
-                reproducible weight initialization.
+            rng: A JAX random key for reproducible weight initialization.
         """
-        super().__init__()
         self.n_features = n_features
         self.interactions = interactions
-        tril = torch.tril_indices(n_features, n_features, 0)
+        tril = jnp.tril_indices(n_features, k=0)
         self.rows = tril[0]
         self.cols = tril[1]
 
+        if rng is None:
+            rng = jax.random.PRNGKey(0)
+
         if self.interactions:
             n_params = n_features * (n_features + 1) // 2
-            self.W = nn.Parameter(
-                2 * torch.rand(n_params, device=device, generator=rng) - 1
-            )
-            parametrize.register_parametrization(
-                self, "W", CholeskySPD(n_features), unsafe=True
-            )
+            self.W = 2 * jax.random.uniform(rng, (n_params,)) - 1
         else:
-            self.W = nn.Parameter(torch.rand(n_features, device=device, generator=rng))
-            parametrize.register_parametrization(self, "W", Positive())
-
-    def forward(self, X: torch.Tensor) -> torch.Tensor:
+            self.W = jax.random.uniform(rng, (n_features,))
+    
+    def get_params(self) -> jnp.ndarray:
+        """Returns the current model parameters."""
+        return self.W
+    
+    def set_params(self, W: jnp.ndarray):
+        """Sets the model parameters."""
+        self.W = W
+    
+    def get_transformed_W(self) -> jnp.ndarray:
+        """Returns the transformed weights (after applying constraints)."""
+        if self.interactions:
+            return cholesky_spd_transform(self.W, self.n_features)
+        else:
+            return positive_transform(self.W)
+    
+    def forward(self, X: jnp.ndarray) -> jnp.ndarray:
         """Computes the weighted sum of features.
 
         Args:
-            X (torch.Tensor): The input feature distances tensor.
+            X: The input feature distances array.
 
         Returns:
-            torch.Tensor: The predicted neural distances.
+            The predicted neural distances.
         """
-        return X @ self.W
+        W_transformed = self.get_transformed_W()
+        return X @ W_transformed
 
     def format_W(self, features: tp.Optional[list[str]] = None) -> pd.DataFrame:
         """Formats the learned weights into a pandas DataFrame.
 
         Args:
-            features (list[str] | None, default=None): A list of feature names.
+            features: A list of feature names.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the formatted weights.
+            A DataFrame containing the formatted weights.
         """
         if features is None:
             features = [f"Feature {i+1}" for i in range(self.n_features)]
-        W = self.W.detach().cpu().squeeze().numpy()
+        W = np.array(self.get_transformed_W())
         if self.interactions:
             W_square = np.full((self.n_features, self.n_features), float("nan"))
             W_square[self.rows, self.cols] = W
@@ -137,54 +130,53 @@ class Model(nn.Module):
         else:
             return pd.DataFrame(W, index=features, columns=["Weight"])
 
-    def corrcoef(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Computes the Pearson correlation coefficient between two tensors.
+    def corrcoef(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
+        """Computes the Pearson correlation coefficient between two arrays.
 
         Args:
-            x (torch.Tensor): The first input tensor.
-            y (torch.Tensor): The second input tensor.
+            x: The first input array.
+            y: The second input array.
 
         Returns:
-            torch.Tensor: The correlation coefficient.
+            The correlation coefficient.
         """
-        x = x.float()
-        y = y.float()
+        x = x.astype(jnp.float32)
+        y = y.astype(jnp.float32)
         y_n = y - y.mean()
         x_n = x - x.mean()
-        y_n = y_n / y_n.norm()
-        x_n = x_n / x_n.norm()
+        y_n = y_n / jnp.linalg.norm(y_n)
+        x_n = x_n / jnp.linalg.norm(x_n)
 
         return (y_n * x_n).sum()
 
-    @torch.no_grad()
-    def spearman(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Computes the Spearman rank correlation coefficient between two tensors.
+    def spearman(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
+        """Computes the Spearman rank correlation coefficient between two arrays.
 
         Args:
-            x (torch.Tensor): The first input tensor.
-            y (torch.Tensor): The second input tensor.
+            x: The first input array.
+            y: The second input array.
 
         Returns:
-            torch.Tensor: The Spearman correlation coefficient.
+            The Spearman correlation coefficient.
         """
         dtype = x.dtype
-        x_rank = x.argsort().argsort().to(dtype)
-        y_rank = y.argsort().argsort().to(dtype)
+        x_rank = jnp.argsort(jnp.argsort(x)).astype(dtype)
+        y_rank = jnp.argsort(jnp.argsort(y)).astype(dtype)
 
         return self.corrcoef(x_rank, y_rank)
 
-    def spearman_diff(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def spearman_diff(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
         """Computes a differentiable Spearman rank correlation using soft ranks.
 
         Args:
-            x (torch.Tensor): The first input tensor.
-            y (torch.Tensor): The second input tensor.
+            x: The first input array.
+            y: The second input array.
 
         Returns:
-            torch.Tensor: The differentiable Spearman correlation coefficient.
+            The differentiable Spearman correlation coefficient.
         """
         n = x.shape[0]
         x_rank = soft_rank(x.reshape(1, -1))
         y_rank = soft_rank(y.reshape(1, -1))
 
-        return self.corrcoef(x_rank / n, y_rank / n)  # type: ignore
+        return self.corrcoef(x_rank / n, y_rank / n)

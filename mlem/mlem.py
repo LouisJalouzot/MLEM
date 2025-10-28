@@ -2,7 +2,8 @@ import typing as tp
 
 import numpy as np
 import pandas as pd
-import torch
+import jax
+import jax.numpy as jnp
 from tqdm.auto import tqdm
 
 from .batch_size import estimate_batch_size
@@ -18,7 +19,7 @@ class MLEM:
         # conditional_pfi: bool = True, # TODO: implement conditional PFI
         n_permutations: int = 5,
         distance: tp.Union[
-            str, tp.Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+            str, tp.Callable[[jnp.ndarray, jnp.ndarray], jnp.ndarray]
         ] = "euclidean",
         nan_to_num: float = 0.0,
         batch_size: tp.Optional[int] = None,
@@ -31,7 +32,6 @@ class MLEM:
         lr: float = 0.1,
         weight_decay: float = 0.0,
         patience: int = 50,
-        device: str = "cpu",
         verbose: bool = False,
         memory: tp.Literal["low", "medium", "high"] = "medium",
         random_seed: tp.Optional[int] = None,
@@ -67,14 +67,12 @@ class MLEM:
             batch_size_max (int, default=2**20): Maximum number of pairs to consider
                 during automatic batch size estimation.
             max_steps (int, default=1000): Maximum number of training steps.
-            lr (float, default=0.1): The learning rate for the AdamW optimizer used to
+            lr (float, default=0.1): The learning rate for the optimizer used to
                 train the model.
             weight_decay (float, default=0.0): L2 regularization strength applied by
-                the AdamW optimizer.
+                the optimizer.
             patience (int, default=50): Number of steps to wait for an improvement
                 in the train loss before early stopping.
-            device (str, default='cpu'): Computational device to run the model on. Can be
-                'cpu' or a CUDA device (e.g., 'cuda:0').
             verbose (bool, default=False): If True, progress bars will be displayed during
                 model fitting and scoring to show progress.
             memory (tp.Literal["low", "medium", "high"], default='medium'): The memory
@@ -101,7 +99,6 @@ class MLEM:
         self.lr = lr
         self.weight_decay = weight_decay
         self.patience = patience
-        self.device = device
         self.verbose = verbose
         self.memory = memory
         self.random_seed = random_seed
@@ -113,30 +110,28 @@ class MLEM:
         self.batch_size_fit_ = None
         self.rng_ = None
         if self.random_seed is not None:
-            self.rng_ = torch.Generator(device=self.device).manual_seed(
-                self.random_seed
-            )
+            self.rng_ = jax.random.PRNGKey(self.random_seed)
 
     def fit(
         self,
-        X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
-        Y: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
+        X: tp.Union[pd.DataFrame, np.ndarray, jnp.ndarray],
+        Y: tp.Union[pd.DataFrame, np.ndarray, jnp.ndarray],
         feature_names: tp.Optional[list[str]] = None,
     ) -> "MLEM":
         """Fits the MLEM model to the provided data.
 
         Args:
-            X (pd.DataFrame | np.ndarray | torch.Tensor): Feature data. It needs to be of
+            X: Feature data. It needs to be of
                 shape (n_samples, n_features) or (n_samples, n_samples, n_features) if
                 `distance` is 'precomputed'.
-            Y (pd.DataFrame | np.ndarray | torch.Tensor): Neural representation data. It
+            Y: Neural representation data. It
                 needs to be of shape (n_samples, n_features) or
                 (n_samples, n_samples, n_features) if `distance` is 'precomputed'.
-            feature_names (list[str] | None): A list of feature names. If not provided,
+            feature_names: A list of feature names. If not provided,
                 it will be inferred from the columns of X if it's a DataFrame.
 
         Returns:
-            MLEM: The fitted model instance.
+            The fitted model instance.
         """
         if feature_names is None and isinstance(X, pd.DataFrame):
             self.feature_names = X.columns.astype(str).tolist()
@@ -149,6 +144,10 @@ class MLEM:
         self.Y_ = self._preprocess_representations(Y)
 
         if self.batch_size is None:
+            if self.rng_ is not None:
+                rng_est, self.rng_ = jax.random.split(self.rng_)
+            else:
+                rng_est = None
             dl_estimation = PairwiseDataloader(
                 X=self.X_,
                 Y=None,
@@ -156,7 +155,7 @@ class MLEM:
                 distance=self.distance,  # type: ignore
                 interactions=False,  # batch_size is estimated with correlations between features not between pairs of features
                 nan_to_num=self.nan_to_num,
-                rng=self.rng_,
+                rng=rng_est,
             )
             self.batch_size_fit_ = estimate_batch_size(
                 dl_estimation,
@@ -170,6 +169,12 @@ class MLEM:
         else:
             self.batch_size_fit_ = self.batch_size
 
+        if self.rng_ is not None:
+            rng_dl, rng_model, self.rng_ = jax.random.split(self.rng_, 3)
+        else:
+            rng_dl = None
+            rng_model = None
+            
         dl = PairwiseDataloader(
             X=self.X_,
             Y=self.Y_,
@@ -177,49 +182,69 @@ class MLEM:
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
-            rng=self.rng_,
+            rng=rng_dl,
         )
 
         self.model_ = Model(
             n_features=self.X_.shape[1],
             interactions=self.interactions,
-            device=self.device,
-            rng=self.rng_,
-        ).to(self.device)
-
-        optimizer = torch.optim.AdamW(
-            self.model_.parameters(),
-            lr=self.lr,
-            weight_decay=self.weight_decay,
-            maximize=True,
+            rng=rng_model,
         )
 
-        best_spearman = -torch.inf
-        best_state_dict = None
+        # Use optax for JAX optimization
+        import optax
+        optimizer = optax.adamw(
+            learning_rate=self.lr,
+            weight_decay=self.weight_decay,
+        )
+        opt_state = optimizer.init(self.model_.get_params())
+
+        # Define the loss function and gradient
+        def loss_fn(params, X_batch, Y_batch):
+            # Temporarily set params for forward pass
+            old_params = self.model_.get_params()
+            self.model_.set_params(params)
+            Y_pred = self.model_.forward(X_batch)
+            score = self.model_.spearman_diff(Y_pred, Y_batch)
+            self.model_.set_params(old_params)
+            return -score  # negative because we want to maximize
+        
+        grad_fn = jax.grad(loss_fn)
+
+        best_spearman = -jnp.inf
+        best_params = None
         steps_no_improve = 0
-        self.model_.train()
         pbar = tqdm(
             total=self.max_steps,
-            desc=f"Fitting model with batches of size {self.batch_size_fit_} on {dl.device}",
+            desc=f"Fitting model with batches of size {self.batch_size_fit_}",
             disable=not self.verbose,
         )
         with pbar:
             for _ in range(self.max_steps):
                 X_batch, Y_batch = dl.sample(self.batch_size_fit_)
-                optimizer.zero_grad()
-                Y_pred = self.model_(X_batch)
+                
+                # Compute gradients
+                params = self.model_.get_params()
+                grads = grad_fn(params, X_batch, Y_batch)
+                
+                # Update parameters
+                updates, opt_state = optimizer.update(grads, opt_state, params)
+                params = optax.apply_updates(params, updates)
+                self.model_.set_params(params)
+                
+                # Compute score for tracking
+                Y_pred = self.model_.forward(X_batch)
                 score = self.model_.spearman_diff(Y_pred, Y_batch)
-                score.backward()
-                optimizer.step()
+                
                 if score > best_spearman:
                     best_spearman = score
-                    best_state_dict = self.model_.state_dict()
+                    best_params = params.copy()
                     steps_no_improve = 0
                 else:
                     steps_no_improve += 1
                 pbar.set_postfix(
                     {
-                        "Score": best_spearman.item(),  # type: ignore
+                        "Score": float(best_spearman),
                         "Patience": self.patience - steps_no_improve,
                     }
                 )
@@ -229,37 +254,37 @@ class MLEM:
                     break
                 pbar.update(1)
 
-        if best_state_dict is not None:
+        if best_params is not None:
             # Restore best model
-            self.model_.load_state_dict(best_state_dict)  # type: ignore
+            self.model_.set_params(best_params)
 
         return self
 
     def score(
         self,
-        X: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]] = None,
-        Y: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]] = None,
+        X: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, jnp.ndarray]] = None,
+        Y: tp.Optional[tp.Union[pd.DataFrame, np.ndarray, jnp.ndarray]] = None,
         warning_threshold: float = 0.05,
         batch_size: tp.Optional[int] = None,
     ) -> tuple[pd.DataFrame, pd.Series]:
         """Computes permutation feature importances.
 
         Args:
-            X (pd.DataFrame | np.ndarray | torch.Tensor | None): The feature data. It
+            X: The feature data. It
                 needs to be of shape (n_samples, n_features) or
                 (n_samples, n_samples, n_features) if `distance` is 'precomputed'. If
                 None, the training data is used.
-            Y (pd.DataFrame | np.ndarray | torch.Tensor | None): The neural representation
+            Y: The neural representation
                 data. It needs to be of shape (n_samples, n_features) or
                 (n_samples, n_samples, n_features) if `distance` is 'precomputed'. If
                 None, the training data is used.
-            warning_threshold (float): The threshold for the standard deviation of
+            warning_threshold: The threshold for the standard deviation of
                 baseline scores above which a warning is issued.
-            batch_size (int | None): The number of pairs to use for scoring. If None, the
+            batch_size: The number of pairs to use for scoring. If None, the
                 number of pairs used during fitting is used.
 
         Returns:
-            tuple[pd.DataFrame, pd.Series]: A tuple containing a DataFrame of feature
+            A tuple containing a DataFrame of feature
                 importances and a Series of baseline scores across permutations.
         """
         if self.model_ is None or self.batch_size_fit_ is None:
@@ -275,6 +300,12 @@ class MLEM:
             X = self._preprocess_features(X)
             Y = self._preprocess_representations(Y)
 
+        if self.rng_ is not None:
+            rng_dl, rng_score, self.rng_ = jax.random.split(self.rng_, 3)
+        else:
+            rng_dl = None
+            rng_score = None
+            
         dl = PairwiseDataloader(
             X=X,  # type: ignore
             Y=Y,
@@ -282,7 +313,7 @@ class MLEM:
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
             nan_to_num=self.nan_to_num,
-            rng=self.rng_,
+            rng=rng_dl,
         )
 
         return compute_feature_importance(
@@ -294,7 +325,7 @@ class MLEM:
             verbose=self.verbose,
             warning_threshold=warning_threshold,
             memory=self.memory,
-            rng=self.rng_,
+            rng=rng_score,
         )
 
     def get_weights(self) -> pd.DataFrame:
@@ -311,22 +342,21 @@ class MLEM:
         return self.model_.format_W(self.feature_names)
 
     def _preprocess_representations(
-        self, Y: tp.Union[pd.DataFrame, pd.Series, np.ndarray, torch.Tensor]
-    ) -> torch.Tensor:
+        self, Y: tp.Union[pd.DataFrame, pd.Series, np.ndarray, jnp.ndarray]
+    ) -> jnp.ndarray:
         """Preprocesses the neural representation data by converting it to a
-        torch.Tensor.
+        jax array.
 
         Args:
-            Y (pd.DataFrame | pd.Series | np.ndarray | torch.Tensor): The input neural
-                data.
+            Y: The input neural data.
 
         Returns:
-            torch.Tensor: The preprocessed neural data as a tensor on the correct device.
+            The preprocessed neural data as a JAX array.
         """
         if isinstance(Y, pd.DataFrame) or isinstance(Y, pd.Series):
             Y = Y.values  # type: ignore
         if isinstance(Y, np.ndarray):
-            Y = torch.from_numpy(Y)
+            Y = jnp.array(Y)
 
         # add hidden size dimension if needed
         if Y.ndim == 1:
@@ -335,41 +365,41 @@ class MLEM:
         # flatten if needed
         Y = Y.reshape(Y.shape[0], -1)  # type: ignore
 
-        return Y.float().to(self.device)  # type: ignore
+        return Y.astype(jnp.float32)  # type: ignore
 
     def _preprocess_features(
-        self, X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]
-    ) -> torch.Tensor:
+        self, X: tp.Union[pd.DataFrame, np.ndarray, jnp.ndarray]
+    ) -> jnp.ndarray:
         """Preprocesses the feature data by encoding and converting it to a
-        torch.Tensor.
+        jax array.
 
         Args:
-            X (pd.DataFrame | np.ndarray | torch.Tensor): The input feature data.
+            X: The input feature data.
 
         Returns:
-            torch.Tensor: The preprocessed feature data as a tensor on the correct device.
+            The preprocessed feature data as a JAX array.
         """
         if not self.distance == "precomputed" and isinstance(X, pd.DataFrame):
             X = self._encode_df(X)
         if isinstance(X, np.ndarray):
-            X = torch.from_numpy(X)
+            X = jnp.array(X)
 
-        return X.float().to(self.device)  # type: ignore
+        return X.astype(jnp.float32)  # type: ignore
 
-    def _encode_df(self, df: pd.DataFrame) -> torch.Tensor:
-        """Encodes a pandas DataFrame into a torch.Tensor.
+    def _encode_df(self, df: pd.DataFrame) -> jnp.ndarray:
+        """Encodes a pandas DataFrame into a jax array.
 
         Numerical columns are min-max scaled. Categorical columns are converted to codes.
 
         Args:
-            df (pd.DataFrame): The DataFrame to encode.
+            df: The DataFrame to encode.
 
         Returns:
-            torch.Tensor: The encoded data as a tensor.
+            The encoded data as a JAX array.
         """
         if df.empty:
-            # Return an empty tensor with the correct number of columns but 0 rows
-            return torch.empty((0, df.shape[1]), dtype=torch.float32)
+            # Return an empty array with the correct number of columns but 0 rows
+            return jnp.empty((0, df.shape[1]), dtype=jnp.float32)
 
         X = np.zeros(df.shape, dtype=np.float32)
         number_cols = np.array(
@@ -391,4 +421,4 @@ class MLEM:
                 s[s == -1] = np.nan
                 X[:, i] = s
 
-        return torch.from_numpy(X)
+        return jnp.array(X)
