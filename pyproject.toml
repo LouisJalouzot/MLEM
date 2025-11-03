@@ -21,6 +21,7 @@ dependencies = [
   "fast-soft-sort @ git+https://github.com/LouisJalouzot/fast-soft-sort.git",
   "numpy>=2.0.0",
   "pandas>=2.2.0",
+  "sympy>=1.2.0",
   "torch>=2.3.0",
   "tqdm>=4.27.0",
   "typing-extensions>=4.0.0",
