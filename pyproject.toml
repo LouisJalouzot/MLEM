@@ -28,6 +28,6 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/LouisJalouzot/MLEM_test"
-"Repository" = "https://github.com/LouisJalouzot/MLEM_test"
-"Bug Tracker" = "https://github.com/LouisJalouzot/MLEM_test/issues"
+"Homepage" = "https://github.com/LouisJalouzot/MLEM"
+"Repository" = "https://github.com/LouisJalouzot/MLEM"
+"Bug Tracker" = "https://github.com/LouisJalouzot/MLEM/issues"
