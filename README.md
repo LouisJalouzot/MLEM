@@ -63,11 +63,23 @@ mlem.fit(X, Y)
 fi, s = mlem.score()
 ```
 
+## Batch size estimation
+
+The first step of the pipeline is to estimate a `batch_size` to use during training. This is done automatically in `.fit()` if `batch_size` is not provided. Since this estimation only depends on the feature data `X`, you can estimate it once and reuse it for different `Y`s.
+
+```python
+batch_size = mlem.estimate_batch_size(X)
+mlem_1 = MLEM(batch_size=batch_size)
+mlem_1.fit(X, Y_1)
+mlem_2 = MLEM(batch_size=batch_size)
+mlem_2.fit(X, Y_2)
+```
+
 # Troubleshooting
 
-## Variability across runs
+## High variability across runs
 
-If you observe a lot of variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training. To mitigate this, you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50) and/or decrease `threshold` (e.g. to 0.005 instead of the default 0.01) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note a larger `batch_size` will increase memory usage and increase computation time.
+If you observe high variability in feature importance or score across runs or seeds (set by `random_seed`), in particular if modelling interactions (`interactions=True`), the model has likely not converged during training. To mitigate this, you can try decreasing `threshold` (e.g. to 0.005 instead of the default 0.01) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM). Note that a larger `batch_size` will increase memory usage and increase computation time. Alternatively you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50).
 
 ## Out of memory errors
 

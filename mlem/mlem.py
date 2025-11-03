@@ -122,6 +122,62 @@ class MLEM:
                 self.random_seed
             )
 
+    def estimate_batch_size(
+        self,
+        X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
+        feature_names: tp.Optional[list[str]] = None,
+        _preprocessed: bool = False,
+    ) -> int:
+        """Estimates a minimal batch size for training based on feature data.
+
+        This method samples batches of feature distances and computes correlations between
+        features. It increases the batch size until the standard deviation of these
+        correlations across trials falls below a `threshold`.
+
+        Args:
+            X (pd.DataFrame | np.ndarray | torch.Tensor): Feature data, shape
+                (n_samples, n_features) or (n_samples, n_samples, n_features) if
+                `distance` is 'precomputed'.
+            feature_names (list[str] | None): A list of feature names. If not provided,
+                it will be inferred from the columns of X if it's a DataFrame.
+            _preprocessed (bool): Internal flag to indicate if X is already preprocessed.
+
+        Returns:
+            int: The estimated batch size.
+        """
+        if feature_names is None and isinstance(X, pd.DataFrame):
+            current_feature_names = X.columns.astype(str).tolist()
+        elif feature_names is not None:
+            current_feature_names = [str(f) for f in feature_names]
+        else:
+            current_feature_names = [f"feature_{i}" for i in range(X.shape[-1])]
+
+        if not _preprocessed:
+            X_processed = self._preprocess_features(X).to(self.device)
+        else:
+            X_processed = X.to(self.device)  # type: ignore
+
+        dl_estimation = PairwiseDataloader(
+            X=X_processed,
+            Y=None,
+            feature_names=current_feature_names,
+            distance=self.distance,  # type: ignore
+            # batch_size is estimated with correlations between features not between pairs of features
+            interactions=False,
+            nan_to_num=self.nan_to_num,
+            rng=self.rng_,
+        )
+        return estimate_batch_size(
+            dl_estimation,
+            self.batch_size_min,
+            self.n_trials,
+            self.threshold,
+            self.factor,
+            self.batch_size_max,
+            self.corr_warning_threshold,
+            self.verbose,
+        )
+
     def fit(
         self,
         X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor],
@@ -157,24 +213,8 @@ class MLEM:
         Y = self.Y_.to(self.device)
 
         if self.batch_size is None:
-            dl_estimation = PairwiseDataloader(
-                X=X,
-                Y=None,
-                feature_names=self.feature_names,
-                distance=self.distance,  # type: ignore
-                interactions=False,  # batch_size is estimated with correlations between features not between pairs of features
-                nan_to_num=self.nan_to_num,
-                rng=self.rng_,
-            )
-            self.batch_size_fit_ = estimate_batch_size(
-                dl_estimation,
-                self.batch_size_min,
-                self.n_trials,
-                self.threshold,
-                self.factor,
-                self.batch_size_max,
-                self.corr_warning_threshold,
-                self.verbose,
+            self.batch_size_fit_ = self.estimate_batch_size(
+                self.X_, self.feature_names, _preprocessed=True
             )
         else:
             self.batch_size_fit_ = self.batch_size
@@ -402,6 +442,6 @@ class MLEM:
                 s = s.astype("category").cat.codes
                 # -1 category code corresponds to NaN values
                 s[s == -1] = np.nan
-                X[:, i] = s
+                X[:, i] = s.values
 
         return torch.from_numpy(X)
