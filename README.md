@@ -17,6 +17,9 @@ mlem = MLEM()
 mlem.fit(X, Y) # Train the model
 feature_importances, scores = mlem.score() # Compute feature importances on the same data
 ```
+It is recommended to use a `pandas.DataFrame` for `X` to correctly handle categorical features. Numerical columns will be min-max scaled, and categorical columns will be encoded as integer codes. If `X` is a NumPy array or a PyTorch tensor, it is assumed to contain only numerical features.
+`Y` will be flattened to a 2D tensor of shape `(n_samples, -1)`.
+
 The output `feature_importances` is a pandas DataFrame containing the feature importances for each feature (columns) across all the `n_permutations` permutations (rows). The output `scores` is a pandas Series of all the Spearman scores computed during the computation of the feature importances (number of features x `n_permutations`).
 
 ## Test-train split
@@ -53,7 +56,7 @@ all_scores = pd.concat(all_scores)
 
 ## Precomputed distances
 
-You can use MLEM on matrices of precomputed feature and neural distances.
+You can use MLEM on matrices of precomputed feature and neural distances. In this case `X` and `Y` are not preprocessed.
 
 ```python
 X = ...  # Your precomputed feature distance matrices of shape (n_samples, n_samples, n_features)
