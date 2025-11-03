@@ -3,7 +3,7 @@
 You can install MLEM via pip directly from GitHub:
 
 ```bash
-pip install git+https://github.com/LouisJalouzot/MLEM_test
+(uv) pip install git+https://github.com/LouisJalouzot/MLEM_test
 ```
 
 # Usage
