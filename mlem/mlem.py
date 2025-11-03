@@ -148,9 +148,12 @@ class MLEM:
         self.X_ = self._preprocess_features(X)
         self.Y_ = self._preprocess_representations(Y)
 
+        X = self.X_.to(self.device)
+        Y = self.Y_.to(self.device)
+
         if self.batch_size is None:
             dl_estimation = PairwiseDataloader(
-                X=self.X_,
+                X=X,
                 Y=None,
                 feature_names=self.feature_names,
                 distance=self.distance,  # type: ignore
@@ -171,8 +174,8 @@ class MLEM:
             self.batch_size_fit_ = self.batch_size
 
         dl = PairwiseDataloader(
-            X=self.X_,
-            Y=self.Y_,
+            X=X,
+            Y=Y,
             feature_names=self.feature_names,
             distance=self.distance,  # type: ignore
             interactions=self.interactions,
@@ -181,7 +184,7 @@ class MLEM:
         )
 
         self.model_ = Model(
-            n_features=self.X_.shape[1],
+            n_features=X.shape[1],
             interactions=self.interactions,
             device=self.device,
             rng=self.rng_,
@@ -229,6 +232,7 @@ class MLEM:
                     break
                 pbar.update(1)
 
+        self.model_.cpu()
         if best_state_dict is not None:
             # Restore best model
             self.model_.load_state_dict(best_state_dict)  # type: ignore
@@ -275,6 +279,9 @@ class MLEM:
             X = self._preprocess_features(X)
             Y = self._preprocess_representations(Y)
 
+        X = X.to(self.device)  # type: ignore
+        Y = Y.to(self.device)  # type: ignore
+
         dl = PairwiseDataloader(
             X=X,  # type: ignore
             Y=Y,
@@ -286,7 +293,7 @@ class MLEM:
         )
 
         return compute_feature_importance(
-            self.model_,
+            self.model_.to(self.device),
             dataloader=dl,
             n_permutations=self.n_permutations,
             # If not overridden, use the batch_size used during fitting
@@ -335,7 +342,7 @@ class MLEM:
         # flatten if needed
         Y = Y.reshape(Y.shape[0], -1)  # type: ignore
 
-        return Y.float().to(self.device)  # type: ignore
+        return Y.float()  # type: ignore
 
     def _preprocess_features(
         self, X: tp.Union[pd.DataFrame, np.ndarray, torch.Tensor]
@@ -354,7 +361,7 @@ class MLEM:
         if isinstance(X, np.ndarray):
             X = torch.from_numpy(X)
 
-        return X.float().to(self.device)  # type: ignore
+        return X.float()  # type: ignore
 
     def _encode_df(self, df: pd.DataFrame) -> torch.Tensor:
         """Encodes a pandas DataFrame into a torch.Tensor.
