@@ -35,6 +35,7 @@ class MLEM:
         verbose: bool = False,
         memory: tp.Literal["low", "medium", "high"] = "medium",
         random_seed: tp.Optional[int] = None,
+        corr_warning_threshold: float = 0.5,
     ):
         """Initializes the MLEM model.
 
@@ -85,6 +86,9 @@ class MLEM:
                 but iterates over features.
             random_seed (int | None, default=None): A seed for the random number
                 generator to ensure reproducibility of results.
+            corr_warning_threshold (float, default=0.5): A warning is issued if
+                the absolute correlation between any pair of features exceeds this
+                threshold during batch size estimation.
         """
         self.interactions = interactions
         # self.conditional_pfi = conditional_pfi
@@ -105,6 +109,7 @@ class MLEM:
         self.verbose = verbose
         self.memory = memory
         self.random_seed = random_seed
+        self.corr_warning_threshold = corr_warning_threshold
 
         self.model_ = None
         self.feature_names = None
@@ -168,6 +173,7 @@ class MLEM:
                 self.threshold,
                 self.factor,
                 self.batch_size_max,
+                self.corr_warning_threshold,
                 self.verbose,
             )
         else:

@@ -44,6 +44,7 @@ def estimate_batch_size(
     threshold: float = 0.01,
     factor: float = 1.2,
     batch_size_max: int = 2**20,
+    corr_warning_threshold: float = 0.5,
     verbose: bool = True,
 ) -> int:
     """Estimate a minimal batch size for training.
@@ -62,6 +63,9 @@ def estimate_batch_size(
         threshold (float, default=0.01): The threshold for stopping the search.
         factor (float, default=1.2): The factor by which to increase the number of pairs.
         batch_size_max (int, default=2**20): The maximum number of pairs to sample.
+        corr_warning_threshold (float, default=0.5): A warning is issued if
+                the absolute correlation between any pair of features exceeds this
+                threshold.
         verbose (bool, default=True): If True, displays a progress bar.
 
     Returns:
@@ -98,6 +102,15 @@ def estimate_batch_size(
                 break
             batch_size = int(batch_size * factor)
             pbar.update(1)
+
+    max_corr = corrs.mean(dim=0).abs().max()
+    if max_corr > corr_warning_threshold:
+        warnings.warn(
+            f"Largest absolute correlation between features is {max_corr:.2g} > warning "
+            f"threshold of {corr_warning_threshold:.2g}. Be cautious when interpreting "
+            "feature importance. Consider balancing better the features in the dataset.",
+            UserWarning,
+        )
 
     if batch_size >= batch_size_max:
         warnings.warn(
