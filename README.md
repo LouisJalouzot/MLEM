@@ -1,6 +1,13 @@
+# Overview
+
+MLEM is a multivariate encoding framework that learns a metric over theoretical features to match neural distances. It:
+- Optimizes Spearman correlation between feature-based and neural distances.
+- Constrains the weight matrix W to be SPD (valid metric), improving convergence speed, accuracy and robustness.
+- Quantifies contributions of features (and optionally of their interactions) via permutation feature importance (PFI).
+
 # Installation
 
-You can install MLEM via pip directly from GitHub:
+You can install MLEM with `pip` directly from GitHub:
 
 ```bash
 (uv) pip install git+https://github.com/LouisJalouzot/MLEM
@@ -24,6 +31,13 @@ If `X` is a NumPy array or a PyTorch tensor, it is assumed to contain only numer
 
 The output `feature_importances` is a pandas DataFrame containing the feature importances for each feature (columns) across all the `n_permutations` permutations (rows).
 The output `scores` is a pandas Series of all the Spearman scores computed during the computation of the feature importances (number of features x `n_permutations`).
+
+## Options and defaults
+
+- `interactions: bool = False` disabled by default for interpretability; enables off-diagonal terms in W when True.
+- `memory: {'auto', 'low', 'high'}` to trade memory vs speed during PFI (default: 'auto').
+- `random_seed: int | None` for reproducibility.
+- `distance: {'euclidean', 'manhattan', 'cosine', 'norm_diff', 'precomputed'}` for neural distances (default: 'euclidean'), `norm_diff` computes the absolute difference between vector norms.
 
 ## Test-train split
 
@@ -69,15 +83,17 @@ mlem = MLEM(distance='precomputed')
 mlem.fit(X, Y)
 fi, s = mlem.score()
 ```
+Note: Distance matrices should be symmetric with zeros on the diagonal.
 
 ## Interactions
 
-You can enable modelling of feature interactions by setting `interactions=True` when initializing MLEM.
+You can enable the modelling of feature interactions by setting `interactions=True` when initializing MLEM.
 This will improve fit performance in particular if some interactions between features are represented in the embeddings `Y`.
 As a result, the output feature importances from `mlem.score` will also include interaction terms.
 Note that this will increase memory usage and computation time.
 Also, correlations between features and their interactions are often very high.
 Since permutation feature importance is sensitive to correlated features, the resulting feature importance values should be interpreted with caution.
+By default, interactions are disabled (diagonal W) for better interpretability.
 
 ## Batch size estimation
 
@@ -93,6 +109,12 @@ mlem_2 = MLEM(batch_size=batch_size)
 mlem_2.fit(X, Y_2)
 ```
 
+## Why MLEM?
+
+- More accurate and more robust weight recovery than FR-RSA with interactions (SPD constraint regularizes learning).
+- Faster convergence and more data efficient.
+- Comparable encoding performance (Spearman) while providing stable, interpretable feature importance profiles.
+
 # Troubleshooting
 
 ## High variability across runs
@@ -101,6 +123,7 @@ If you observe high variability in feature importance or score across runs or se
 To mitigate this, you can try decreasing `threshold` (e.g. to 0.005 instead of the default 0.01) so that the estimated `batch_size` is larger (or override it at the initialization of MLEM).
 Note that a larger `batch_size` will increase memory usage and increase computation time.
 Alternatively you can try increasing the `patience` parameter (e.g. to 100 instead of the default 50).
+Alternatively, you can also set `random_seed` to ensure reproducibility.
 
 ## Out of memory errors
 
@@ -115,3 +138,8 @@ On the other hand, if you have a lot of memory available, you can set `memory` t
 If you encounter out of memory errors during batch size estimation or during training, you can try increasing the `threshold` parameter (e.g. to 0.02 instead of the default 0.01) so that the estimated `batch_size` is smaller.
 Or directly set the `batch_size` parameter to a smaller value.
 Note that this will decrease the precision of the method and induce more variability across runs.
+
+# Citation
+
+If you use MLEM, please cite:
+- Jalouzot et al. (2024). Metric Learning Encoding Models: A Multivariate Framework for Interpreting Neural Representations. arXiv:2402.11608 — https://arxiv.org/abs/2402.11608
