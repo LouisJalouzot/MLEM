@@ -204,7 +204,7 @@ class MLEM:
         elif feature_names is not None:
             self.feature_names = [str(f) for f in feature_names]
         else:
-            self.feature_names = [f"feature_{i}" for i in range(X.shape[1])]
+            self.feature_names = [f"feature_{i}" for i in range(X.shape[-1])]
 
         self.X_ = self._preprocess_features(X)
         self.Y_ = self._preprocess_representations(Y)
@@ -230,7 +230,7 @@ class MLEM:
         )
 
         self.model_ = Model(
-            n_features=X.shape[1],
+            n_features=X.shape[-1],
             interactions=self.interactions,
             device=self.device,
             rng=self.rng_,
@@ -315,9 +315,9 @@ class MLEM:
         if self.model_ is None or self.batch_size_fit_ is None:
             raise RuntimeError("You must call fit before calling score.")
         if X is None or Y is None:
-            assert (
-                X is None and Y is None
-            ), "You must provide both X and Y or none of them."
+            assert X is None and Y is None, (
+                "You must provide both X and Y or none of them."
+            )
             # If X and Y are not provided, use the training data
             X = self.X_
             Y = self.Y_
@@ -383,7 +383,7 @@ class MLEM:
 
         # add hidden size dimension if needed
         if Y.ndim == 1:
-            Y = Y[:, None]
+            Y = Y[:, None]  # type: ignore
 
         # flatten if needed
         Y = Y.reshape(Y.shape[0], -1)  # type: ignore
@@ -441,7 +441,7 @@ class MLEM:
             else:
                 s = s.astype("category").cat.codes
                 # -1 category code corresponds to NaN values
-                s[s == -1] = np.nan
-                X[:, i] = s.values
+                s[s == -1] = np.nan  # type: ignore
+                X[:, i] = s.values  # type: ignore
 
         return torch.from_numpy(X)
