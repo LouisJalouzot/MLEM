@@ -139,6 +139,10 @@ If you encounter out of memory errors during batch size estimation or during tra
 Or directly set the `batch_size` parameter to a smaller value.
 Note that this will decrease the precision of the method and induce more variability across runs.
 
+If the dimension of neural representations (second dimension of Y, `hidden_size`) and the estimated batch size are very large then a lot of memory is required (`hidden_size` x `batch_size` x 4 bytes).
+If the number of samples is not too large, you can use precomputed distances instead.
+Furthermore the batch size estimation will require 16 times more memory (you can decrease the `n_trials` parameter that is set to 16 by default or directly set the `batch_size` parameter).
+
 # Citation
 
 If you use MLEM, please cite:
