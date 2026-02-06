@@ -24,9 +24,9 @@ mlem = MLEM()
 mlem.fit(X, Y) # Train the model
 feature_importances, scores = mlem.score() # Compute feature importances on the same data
 ```
-It is recommended to use a `pandas.DataFrame` for `X` to correctly handle categorical features.
-Numerical columns will be min-max scaled, and categorical columns will be encoded as integer codes.
-If `X` is a NumPy array or a PyTorch tensor, it is assumed to contain only numerical features.
+It is recommended to use a `pandas.DataFrame` for `X` to better handle categorical/nominal features.
+In this case, columns of type `object` or `str` will be treadted as categorical/nominal and the others (`int`, `float`, any subtype of `np.number`) will be treated as ordered.
+If `X` is a NumPy array or a PyTorch tensor, it is assumed to contain only numerical features which will be treated as ordered.
 `Y` will be flattened to a 2D tensor of shape `(n_samples, -1)`.
 
 The output `feature_importances` is a pandas DataFrame containing the feature importances for each feature (columns) across all the `n_permutations` permutations (rows).
