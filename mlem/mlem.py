@@ -3,6 +3,7 @@ import typing as tp
 import numpy as np
 import pandas as pd
 import torch
+from pandas.api.types import is_numeric_dtype
 from tqdm.auto import tqdm
 
 from .batch_size import estimate_batch_size
@@ -425,23 +426,18 @@ class MLEM:
             return torch.empty((0, df.shape[1]), dtype=torch.float32)
 
         X = np.zeros(df.shape, dtype=np.float32)
-        number_cols = np.array(
-            [
-                (not isinstance(t, pd.CategoricalDtype) and np.issubdtype(t, np.number))
-                for t in df.dtypes
-            ]
-        )
         for i in range(df.shape[1]):
             s = df.iloc[:, i]
-            if number_cols[i]:
+            if is_numeric_dtype(s.dtype) and not isinstance(s.dtype, pd.CategoricalDtype):
                 # min max scale
-                m, M = np.nanmin(s.values), np.nanmax(s.values)  # type: ignore
+                values = s.to_numpy(dtype=np.float32, na_value=np.nan)
+                m, M = np.nanmin(values), np.nanmax(values)
                 scale = 1 / (M - m) if M > m else 1
-                X[:, i] = (s.values - m) * scale
+                X[:, i] = (values - m) * scale
             else:
-                s = s.astype("category").cat.codes
+                s = s.astype("category").cat.codes.astype(np.float32)
                 # -1 category code corresponds to NaN values
-                s[s == -1] = np.nan  # type: ignore
-                X[:, i] = s.values  # type: ignore
+                s[s == -1] = np.nan
+                X[:, i] = s.to_numpy(dtype=np.float32, na_value=np.nan)
 
         return torch.from_numpy(X)
